@@ -64,7 +64,7 @@ npm run dev
 ### 4️⃣ Truy cập web
 
 - **Frontend:** `http://localhost:5173/`
-- **Backend API:** `hehe`
+- **Backend API:** `http://localhost:8000/`
 
 ## 📌 Môi trường `.env` mẫu
 
@@ -72,7 +72,7 @@ npm run dev
 
 ```
 PORT=5000
-MONGO_URI=mongodb+srv://your_mongo_url
+MONGO_URL=mongodb://localhost:27017/dbconnect
 JWT_SECRET=your_secret_key
 CORS_ORIGIN=http://localhost:5173
 ```
