@@ -1,27 +1,26 @@
-# Workly - Full-Stack Project 🚀
+# Workly - Full-Stack Project 
 
 Workly là một ứng dụng quản lý công việc trực quan, cho phép người dùng tạo bảng, danh sách, thẻ (cards) và kéo thả chúng dễ dàng. Dự án được xây dựng với **ReactJS (Vite) cho Frontend** và **Node.js + Express cho Backend**, hỗ trợ **real-time, authentication, và drag & drop**.
 
-## 🌟 Tính năng chính
+##  Tính năng chính
 
-✅ Quản lý bảng, danh sách, thẻ (cards)
-✅ Kéo thả card giữa các danh sách 🎯
-✅ Cập nhật **real-time** với WebSocket 🔄
-✅ Hệ thống **đăng nhập & bảo mật JWT** 🔐
-✅ Hỗ trợ **tìm kiếm, gán người dùng, deadline** 🔍
-✅ Giao diện hiện đại với **Dark Mode** 🌙
-✅ Quản lý công việc theo giai đoạn 📅 (TODO, DOING, DONE)
+- Quản lý bảng, danh sách, thẻ (cards)
+- Kéo thả card giữa các danh sách 
+- Cập nhật **real-time** với WebSocket 
+- Hệ thống **đăng nhập & bảo mật JWT** 
+- Hỗ trợ **tìm kiếm, gán người dùng, deadline** 
+- Giao diện hiện đại với **Dark Mode** 
 
-## 📌 Công nghệ sử dụng
+##  Công nghệ sử dụng
 
-### 🖥 Frontend (React + Vite)
+### Frontend (React + Vite)
 
 - **ReactJS + Vite** - Framework nhanh, nhẹ
 - **Tailwind CSS** - Tạo giao diện đẹp, tối ưu
 - **React DnD** - Hỗ trợ kéo thả
 - **React Query** - Quản lý state API tối ưu
 
-### 🔧 Backend (Node.js + Express)
+###  Backend (Node.js + Express)
 
 - **Node.js + Express** - Viết API nhanh, dễ mở rộng
 - **MongoDB + Mongoose** - Lưu trữ dữ liệu linh hoạt
@@ -29,22 +28,22 @@ Workly là một ứng dụng quản lý công việc trực quan, cho phép ng�
 - **JWT Authentication** - Xác thực bảo mật
 - **Redis** - Cache dữ liệu tăng hiệu suất
 
-### ☁️ Deployment & DevOps
+###  Deployment & DevOps
 
 - **Docker** - Đóng gói ứng dụng
 - **CI/CD với GitHub Actions** - Tự động deploy
 - **Vercel (Frontend) + Railway (Backend)** - Deploy miễn phí
 
-## 🚀 Cách chạy dự án
+##  Cách chạy dự án
 
-### 1️⃣ Clone repo
+### 1 Clone repo
 
 ```sh
 git https://github.com/camtuduong/Workly.git
 cd workly
 ```
 
-### 2️⃣ Cài đặt Backend
+### 2️ Cài đặt Backend
 
 ```sh
 cd backend
@@ -53,7 +52,7 @@ cp .env.example .env  # Cấu hình biến môi trường
 npm start
 ```
 
-### 3️⃣ Cài đặt Frontend
+### 3️ Cài đặt Frontend
 
 ```sh
 cd ../frontend
@@ -61,12 +60,12 @@ npm install
 npm run dev
 ```
 
-### 4️⃣ Truy cập web
+### 4️ Truy cập web
 
 - **Frontend:** `http://localhost:5173/`
 - **Backend API:** `http://localhost:8000/`
 
-## 📌 Môi trường `.env` mẫu
+##  Môi trường `.env` mẫu
 
 ### Backend (`backend/.env`)
 
