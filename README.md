@@ -1,17 +1,17 @@
-# Workly - Full-Stack Project 
+# Workly - Full-Stack Project
 
 Workly là một ứng dụng quản lý công việc trực quan, cho phép người dùng tạo bảng, danh sách, thẻ (cards) và kéo thả chúng dễ dàng. Dự án được xây dựng với **ReactJS (Vite) cho Frontend** và **Node.js + Express cho Backend**, hỗ trợ **real-time, authentication, và drag & drop**.
 
-##  Tính năng chính
+## Tính năng chính
 
 - Quản lý bảng, danh sách, thẻ (cards)
-- Kéo thả card giữa các danh sách 
-- Cập nhật **real-time** với WebSocket 
-- Hệ thống **đăng nhập & bảo mật JWT** 
-- Hỗ trợ **tìm kiếm, gán người dùng, deadline** 
-- Giao diện hiện đại với **Dark Mode** 
+- Kéo thả card giữa các danh sách
+- Cập nhật **real-time** với WebSocket
+- Hệ thống **đăng nhập & bảo mật JWT**
+- Hỗ trợ **tìm kiếm, gán người dùng, deadline**
+- Giao diện hiện đại với **Dark Mode**
 
-##  Công nghệ sử dụng
+## Công nghệ sử dụng
 
 ### Frontend (React + Vite)
 
@@ -20,7 +20,7 @@ Workly là một ứng dụng quản lý công việc trực quan, cho phép ng�
 - **React DnD** - Hỗ trợ kéo thả
 - **React Query** - Quản lý state API tối ưu
 
-###  Backend (Node.js + Express)
+### Backend (Node.js + Express)
 
 - **Node.js + Express** - Viết API nhanh, dễ mở rộng
 - **MongoDB + Mongoose** - Lưu trữ dữ liệu linh hoạt
@@ -28,13 +28,13 @@ Workly là một ứng dụng quản lý công việc trực quan, cho phép ng�
 - **JWT Authentication** - Xác thực bảo mật
 - **Redis** - Cache dữ liệu tăng hiệu suất
 
-###  Deployment & DevOps
+### Deployment & DevOps
 
 - **Docker** - Đóng gói ứng dụng
 - **CI/CD với GitHub Actions** - Tự động deploy
 - **Vercel (Frontend) + Railway (Backend)** - Deploy miễn phí
 
-##  Cách chạy dự án
+## Cách chạy dự án
 
 ### 1 Clone repo
 
@@ -49,7 +49,7 @@ cd workly
 cd backend
 npm install
 cp .env.example .env  # Cấu hình biến môi trường
-npm start
+npm run dev
 ```
 
 ### 3️ Cài đặt Frontend
@@ -65,7 +65,7 @@ npm run dev
 - **Frontend:** `http://localhost:5173/`
 - **Backend API:** `http://localhost:8000/`
 
-##  Môi trường `.env` mẫu
+## Môi trường `.env` mẫu
 
 ### Backend (`backend/.env`)
 
