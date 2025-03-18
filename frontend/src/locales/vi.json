@@ -3,5 +3,14 @@
   "login": "Đăng nhập",
   "logout": "Đăng xuất",
   "dark_mode": "Chế độ tối",
-  "light_mode": "Chế độ sáng"
+  "light_mode": "Chế độ sáng",
+  "email": "Email",
+  "password": "Mật khẩu",
+  "forgotPassword": "Quên mật khẩu",
+  "sign_in": "Đăng Nhập",
+  "sign_in_with_email": "Đăng nhập bằng email",
+  "or_continue_with": "Hoặc tiếp tục với",
+  "create_an_account": "Tạo tài khoản",
+  "terms_message": "Bằng cách đăng ký, bạn đồng ý với",
+  "terms_and_conditions": "Điều khoản & Điều kiện"
 }
