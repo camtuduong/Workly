@@ -20,7 +20,7 @@ export default function Register() {
     try {
       const result = await registerUser(username, email, password);
       setMessage("Đăng ký thành công");
-      navigate("/login");
+      navigate("/singin");
     } catch (error) {
       setMessage(error.message || "Đăng ký thất bại");
     }
@@ -83,7 +83,7 @@ export default function Register() {
           <p className="text-center text-xs text-gray-400">
             Already have an account?{" "}
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/signin")}
               className="text-purple-400 underline"
             >
               Sign In
