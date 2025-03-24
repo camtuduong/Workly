@@ -1,16 +1,13 @@
 {
-  "welcome": "Chào mừng bờ dô đã đến đây",
-  "login": "Đăng nhập",
-  "logout": "Đăng xuất",
-  "dark_mode": "Chế độ tối",
-  "light_mode": "Chế độ sáng",
-  "email": "Email",
+  "signIn": "Đăng nhập",
+  "signInWithEmail": "Đăng nhập bằng địa chỉ email",
   "password": "Mật khẩu",
-  "forgotPassword": "Quên mật khẩu",
-  "sign_in": "Đăng Nhập",
-  "sign_in_with_email": "Đăng nhập bằng email",
-  "or_continue_with": "Hoặc tiếp tục với",
-  "create_an_account": "Tạo tài khoản",
-  "terms_message": "Bằng cách đăng ký, bạn đồng ý với",
-  "terms_and_conditions": "Điều khoản & Điều kiện"
+  "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+  "loginSuccess": "Đăng nhập thành công!",
+  "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+  "orContinueWith": "Hoặc tiếp tục với",
+  "createAccount": "Tạo tài khoản",
+  "termsAndConditions": "Bằng cách đăng ký, bạn đồng ý với",
+  "termsAndConditionsLink": "Điều khoản và Điều kiện",
+  "loading": "Đang tải..."
 }

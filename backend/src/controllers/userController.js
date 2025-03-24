@@ -57,46 +57,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Đăng nhập user
-const loginUser = async (req, res) => {
-  try {
-    console.log("Request body:", req.body); // Log payload nhận được
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      console.log("Missing email or password:", { email, password });
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
-
-    console.log("Finding user with email:", email);
-    const user = await Users.findOne({ email }).select("+password");
-    if (!user) {
-      console.log("User not found with email:", email);
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    console.log("Comparing password for user:", email);
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      console.log("Password does not match for user:", email);
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    console.log("Generating token for user:", user._id);
-    const token = generateToken(user._id);
-    res.json({
-      message: "Login successful",
-      token,
-      language: user.language,
-    });
-  } catch (error) {
-    console.error("Error in loginUser:", error.message, error.stack);
-    res.status(500).json({ message: "Server Error", error: error.message });
-  }
-};
-
 // Cập nhật ngôn ngữ của user
 const updateLanguage = async (req, res) => {
   try {
@@ -134,6 +94,5 @@ module.exports = {
   getAllUsers,
   checkUser,
   registerUser,
-  loginUser,
   updateLanguage,
 };

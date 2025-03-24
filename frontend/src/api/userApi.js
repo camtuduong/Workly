@@ -1,7 +1,7 @@
 import apiClient from "./config";
 
 const USER_API = "/users";
-
+const AUTH_API = "/auth";
 export const registerUser = async (username, email, password) => {
   try {
     const { data } = await apiClient.post(`${USER_API}/register`, {
@@ -17,7 +17,7 @@ export const registerUser = async (username, email, password) => {
 
 export const loginUser = async (email, password) => {
   try {
-    const { data } = await apiClient.post(`${USER_API}/login`, {
+    const { data } = await apiClient.post(`${AUTH_API}/login`, {
       email,
       password,
     });
@@ -39,6 +39,27 @@ export const getUserProfile = async () => {
     const { data } = await apiClient.get(`${USER_API}/profile`);
     return data;
   } catch (error) {
+    throw error.response?.data || { message: "Server error" };
+  }
+};
+
+export const updateLanguage = async (language) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw { message: "No token found" };
+    const { data } = await apiClient.put(
+      `${USER_API}/language`,
+      { language },
+      {
+        header: { Authorization: `Bearer ${token}` },
+      },
+    );
+    return data;
+  } catch (error) {
+    console.error(
+      "Error in updateLanguage API:",
+      error.response?.data || error.message,
+    );
     throw error.response?.data || { message: "Server error" };
   }
 };

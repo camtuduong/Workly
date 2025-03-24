@@ -1,16 +1,13 @@
 {
-  "welcome": "Welcome to come here bro",
-  "login": "Login",
-  "logout": "Logout",
-  "dark_mode": "Dark Mode",
-  "light_mode": "Light Mode",
-  "email": "Email Address",
+  "signIn": "Sign In",
+  "signInWithEmail": "Sign in with email address",
   "password": "Password",
-  "forgotPassword": "Forgot Password",
-  "sign_in": "Sign In",
-  "sign_in_with_email": "Sign in with email address",
-  "or_continue_with": "Or continue with",
-  "create_an_account": "Create an account",
-  "terms_message": "By registering you agree to our",
-  "terms_and_conditions": "Terms and Conditions"
+  "passwordTooShort": "Password must be at least 6 characters",
+  "loginSuccess": "Login successful!",
+  "loginFailed": "Login failed. Please try again.",
+  "orContinueWith": "Or continue with",
+  "createAccount": "Create an account",
+  "termsAndConditions": "By registering you agree to our",
+  "termsAndConditionsLink": "Terms and Conditions",
+  "loading": "Loading..."
 }

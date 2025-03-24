@@ -3,29 +3,43 @@ import i18n from "../i18n";
 
 const useLanguageStore = create((set, get) => ({
   language: localStorage.getItem("language") || "en",
-
-  setLanguage: (lang) => {
-    if (get().language !== lang) {
-      // Chỉ cập nhật nếu khác ngôn ngữ hiện tại
-      localStorage.setItem("language", lang);
-      i18n.changeLanguage(lang);
-      set({ language: lang });
+  setLanguage: (newLanguage) => {
+    const currentLanguage = get().language; // Lấy ngôn ngữ hiện tại từ state
+    if (currentLanguage === newLanguage) {
+      return; // Bỏ qua nếu ngôn ngữ không thay đổi
     }
-  },
 
-  fetchUserLanguage: async (userId) => {
+    set({ language: newLanguage });
     try {
-      const res = await fetch(
-        `http://localhost:7000/api/users/${userId}/language`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch language");
-      const data = await res.json();
-
-      if (data.language && get().language !== data.language) {
-        get().setLanguage(data.language); // Tận dụng setLanguage để tối ưu
+      localStorage.setItem("language", newLanguage); // Lưu vào localStorage
+    } catch (error) {
+      console.error("Error saving language to localStorage:", error);
+    }
+    i18n.changeLanguage(newLanguage);
+  },
+  updateUserLanguage: async (language) => {
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && token) {
+        await fetch(`http://localhost:8000/api/users/${user.id}/language`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ language }),
+        });
+        set({ language });
+        try {
+          localStorage.setItem("language", language);
+        } catch (error) {
+          console.error("Error saving language to localStorage:", error);
+        }
+        i18n.changeLanguage(language);
       }
     } catch (error) {
-      console.error("Error fetching user language:", error);
+      console.error("Error updating user language:", error);
     }
   },
 }));
