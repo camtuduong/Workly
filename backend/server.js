@@ -9,8 +9,9 @@ const app = express();
 dotenv.config();
 
 // Middleware
-app.use(express.json());
-app.use(cors());
+// Middleware
+app.use(cors({ origin: "http://localhost:5173" })); // Đảm bảo CORS cho frontend
+app.use(express.json()); // Parse JSON
 
 // Routes
 app.use("/api/users", userRoutes);
@@ -18,7 +19,6 @@ app.use("/api/users", userRoutes);
 // Kết nối MongoDB
 connectDB();
 
-// Lắng nghe cổng (BẠN ĐÃ THIẾU DÒNG NÀY)
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

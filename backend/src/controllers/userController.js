@@ -15,11 +15,10 @@ const checkUser = async (req, res) => {
     const { email } = req.body;
     const user = await Users.findOne({ email });
 
-    if (user) {
-      return res.json({ exists: true, message: "User exists." });
-    } else {
-      return res.json({ exists: false, message: "User not found." });
-    }
+    res.json({
+      exists: !!user,
+      message: user ? "User exists." : "User not found.",
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -28,52 +27,73 @@ const checkUser = async (req, res) => {
 // Đăng ký user mới
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, language } = req.body;
+    const { username, email, password, language } = req.body;
 
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+    }
     const existingUser = await Users.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists." });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new Users({
-      name,
+      username,
       email,
       password: hashedPassword,
-      language: language || "en",
+      language,
     });
 
     await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(400).json({ message: "Error registering user" });
+    res.status(400).json({ message: "Error registering user", error });
   }
 };
 
-//  Đăng nhập user
+// Đăng nhập user
 const loginUser = async (req, res) => {
   try {
+    console.log("Request body:", req.body); // Log payload nhận được
     const { email, password } = req.body;
-    const user = await Users.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!email || !password) {
+      console.log("Missing email or password:", { email, password });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
+    console.log("Finding user with email:", email);
+    const user = await Users.findOne({ email }).select("+password");
+    if (!user) {
+      console.log("User not found with email:", email);
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    console.log("Comparing password for user:", email);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      console.log("Password does not match for user:", email);
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    console.log("Generating token for user:", user._id);
     const token = generateToken(user._id);
-
     res.json({
       message: "Login successful",
       token,
       language: user.language,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Error in loginUser:", error.message, error.stack);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -84,12 +104,12 @@ const updateLanguage = async (req, res) => {
     const { language } = req.body;
 
     const user = await Users.findById(userId);
-    if (!user) return res.status(400).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     user.language = language;
     await user.save();
 
-    res.json({ message: "Language updated successfully" });
+    res.json({ message: "Language updated successfully", language });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -98,15 +118,13 @@ const updateLanguage = async (req, res) => {
 // Lấy danh sách user
 const getAllUsers = async (req, res) => {
   try {
-    //Lấy danh sách user nhưng ẩn password
     const users = await Users.find().select("-password");
 
-    //nếu không có user
-    if (!users || users.length === 0) {
+    if (!users.length) {
       return res.status(404).json({ message: "No Users Found" });
     }
 
-    res.json(users); //trả về danh sách user
+    res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

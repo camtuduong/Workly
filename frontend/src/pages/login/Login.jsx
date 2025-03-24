@@ -1,8 +1,37 @@
 import { useNavigate } from "react-router-dom";
 import AuthBackground from "../../components/AuthBackground"; // Import component
+import { useState } from "react";
+import { loginUser } from "../../api/userApi";
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (password.length < 6) {
+      setMessage("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const result = await loginUser(email, password);
+      if (result.language) {
+        localStorage.setItem("language", result.language);
+      }
+      // console.log(result);
+      setMessage("Đăng nhập thành công");
+      navigate("/");
+    } catch (error) {
+      setMessage(error.message || "Đăng nhập thất bại");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#1E1331]">
@@ -14,18 +43,38 @@ export default function SignIn() {
           <p className="text-gray-400">Sign in with email address</p>
 
           {/* Input Field */}
-          <div>
-            <input
-              type="email"
-              placeholder="Yourname@gmail.com"
-              className="w-full rounded-lg bg-[#2A1F42] p-3 text-white focus:outline-none"
-            />
-          </div>
-
-          {/* Sign In Button */}
-          <button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 p-3 font-semibold text-white transition duration-700 hover:from-purple-300">
-            Sign In
-          </button>
+          <form action="" className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <input
+                type="email"
+                placeholder="Yourname@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg bg-[#2A1F42] p-3 text-white focus:outline-none"
+                required
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg bg-[#2A1F42] p-3 text-white focus:outline-none"
+                required
+              />
+            </div>
+            {/* Sign In Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 p-3 font-semibold text-white transition duration-700 hover:from-purple-300"
+            >
+              {isLoading ? "Loading..." : "Sign In"}
+            </button>
+          </form>
+          {/* Hiển thị thông báo */}
+          {message && <p className="text-red-500">{message}</p>}
 
           {/* Divider */}
           <div className="flex items-center justify-center text-gray-400">

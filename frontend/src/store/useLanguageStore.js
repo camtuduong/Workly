@@ -1,28 +1,31 @@
 import { create } from "zustand";
 import i18n from "../i18n";
 
-const useLanguageStore = create((set) => ({
+const useLanguageStore = create((set, get) => ({
   language: localStorage.getItem("language") || "en",
 
-  setLanguage: async (lang, userId = null) => {
-    try {
-      //gửi request lên backend để lưu vào database
-      if (userId) {
-        await fetch("http://localhost:7000/api/users/language", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, language: lang }),
-        });
-      }
-
-      //cập nhật localStorage vào i18n
+  setLanguage: (lang) => {
+    if (get().language !== lang) {
+      // Chỉ cập nhật nếu khác ngôn ngữ hiện tại
       localStorage.setItem("language", lang);
       i18n.changeLanguage(lang);
       set({ language: lang });
+    }
+  },
 
-      //
+  fetchUserLanguage: async (userId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:7000/api/users/${userId}/language`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch language");
+      const data = await res.json();
+
+      if (data.language && get().language !== data.language) {
+        get().setLanguage(data.language); // Tận dụng setLanguage để tối ưu
+      }
     } catch (error) {
-      console.error("Error updating language", error);
+      console.error("Error fetching user language:", error);
     }
   },
 }));

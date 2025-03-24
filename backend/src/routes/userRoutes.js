@@ -1,17 +1,19 @@
 const express = require("express");
 const {
+  getAllUsers,
+  checkUser,
   registerUser,
   loginUser,
   updateLanguage,
-  getAllUsers,
-} = require("../controller/userController");
+} = require("../controllers/userController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-const protect = require("../middleware/authMiddleware");
 const router = express.Router();
 
-router.get("/", protect, getAllUsers);
-router.post("/register", registerUser); //Đăng kí user
-router.post("/login", loginUser); //Đăng nhập user
-router.put("/language", protect, updateLanguage); //cập nhật ngôn ngữ
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/check", checkUser);
+router.put("/language", authMiddleware, updateLanguage);
+router.get("/", getAllUsers);
 
 module.exports = router;
