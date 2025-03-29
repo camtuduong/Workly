@@ -5,6 +5,9 @@ const cors = require("cors");
 const connectDB = require("./src/config/db");
 const userRoutes = require("./src/routes/userRoutes");
 const authRoutes = require("./src/routes/authRoutes");
+const boardRoutes = require("./src/routes/boardRoutes");
+const listRoutes = require("./src/routes/listRoutes");
+const cardRoutes = require("./src/routes/cardRoutes");
 
 const app = express();
 dotenv.config();
@@ -16,6 +19,10 @@ app.use(express.json()); // Parse JSON
 // Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/boards", boardRoutes);
+app.use("/api/cards", cardRoutes);
+app.use("/api/lists", listRoutes);
+
 // Kết nối MongoDB
 connectDB();
 
