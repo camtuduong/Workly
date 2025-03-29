@@ -9,5 +9,16 @@
   "createAccount": "Tạo tài khoản",
   "termsAndConditions": "Bằng cách đăng ký, bạn đồng ý với",
   "termsAndConditionsLink": "Điều khoản và Điều kiện",
-  "loading": "Đang tải..."
+  "loading": "Đang tải...",
+  "navbar": {
+    "boards": "Bảng",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt",
+    "logout": "Đăng xuất"
+  },
+  "board": {
+    "title": "Tiêu đề bảng",
+    "addList": "Thêm danh sách",
+    "addCard": "Thêm thẻ"
+  }
 }

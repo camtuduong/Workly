@@ -6,9 +6,10 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     language: { type: String, default: "en" },
+    boards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
   },
   { timestamps: true }
 );
 
-const Users = mongoose.model("Users", userSchema);
-module.exports = Users;
+const User = mongoose.model("User", userSchema, "user");
+module.exports = User;

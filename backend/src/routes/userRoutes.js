@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  getAllUsers,
+  getAllUser,
   checkUser,
   registerUser,
   updateLanguage,
@@ -12,6 +12,6 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/check", checkUser);
 router.put("/language", authMiddleware, updateLanguage);
-router.get("/", getAllUsers);
+router.get("/", getAllUser);
 
 module.exports = router;

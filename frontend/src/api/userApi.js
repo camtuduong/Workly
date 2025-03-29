@@ -1,6 +1,6 @@
 import apiClient from "./config";
 
-const USER_API = "/users";
+const USER_API = "/user";
 const AUTH_API = "/auth";
 export const registerUser = async (username, email, password) => {
   try {

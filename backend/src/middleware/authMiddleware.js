@@ -1,23 +1,18 @@
 const jwt = require("jsonwebtoken");
 
-const protect = (req, res, next) => {
-  let token;
+const authMiddleware = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1]; //lấy token từ header
-
-      // giải mã token để lấy userId
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = decoded.userId; //lưu userId vào request
-      next(); //chuyển đến API tiếp theo
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-  } else return res.status(401).json({ message: "No token provided" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { userId: decoded.userId }; // Gán userId vào req.user
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Token invalid" });
+  }
 };
-module.exports = protect;
+
+module.exports = authMiddleware;

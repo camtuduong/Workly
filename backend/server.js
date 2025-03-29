@@ -10,12 +10,11 @@ const app = express();
 dotenv.config();
 
 // Middleware
-// Middleware
 app.use(cors({ origin: "http://localhost:5173" })); // Đảm bảo CORS cho frontend
 app.use(express.json()); // Parse JSON
 
 // Routes
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 // Kết nối MongoDB
 connectDB();

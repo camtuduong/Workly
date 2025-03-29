@@ -1,28 +1,44 @@
 import { create } from "zustand";
 import i18n from "../i18n";
+import debounce from "lodash/debounce";
 
 const useLanguageStore = create((set, get) => ({
   language: localStorage.getItem("language") || "en",
+  error: null,
   setLanguage: (newLanguage) => {
-    const currentLanguage = get().language; // Lấy ngôn ngữ hiện tại từ state
+    const currentLanguage = get().language;
     if (currentLanguage === newLanguage) {
-      return; // Bỏ qua nếu ngôn ngữ không thay đổi
+      return;
     }
 
-    set({ language: newLanguage });
+    set({ language: newLanguage, error: null });
     try {
-      localStorage.setItem("language", newLanguage); // Lưu vào localStorage
+      localStorage.setItem("language", newLanguage);
     } catch (error) {
       console.error("Error saving language to localStorage:", error);
+      set({ error: "Failed to save language to localStorage" });
     }
     i18n.changeLanguage(newLanguage);
   },
-  updateUserLanguage: async (language) => {
+  updateUserLanguage: debounce(async (language) => {
+    const currentLanguage = get().language;
+    if (currentLanguage === language) {
+      return;
+    }
+
+    set({ language, error: null });
+    try {
+      localStorage.setItem("language", language);
+    } catch (error) {
+      console.error("Error saving language to localStorage:", error);
+      set({ error: "Failed to save language to localStorage" });
+    }
+    i18n.changeLanguage(language);
+
     try {
       const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && token) {
-        await fetch(`http://localhost:8000/api/users/${user.id}/language`, {
+      if (token) {
+        const res = await fetch("http://localhost:8000/api/users/language", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -30,18 +46,17 @@ const useLanguageStore = create((set, get) => ({
           },
           body: JSON.stringify({ language }),
         });
-        set({ language });
-        try {
-          localStorage.setItem("language", language);
-        } catch (error) {
-          console.error("Error saving language to localStorage:", error);
+
+        if (!res.ok) {
+          throw new Error("Failed to update language in database");
         }
-        i18n.changeLanguage(language);
       }
     } catch (error) {
-      console.error("Error updating user language:", error);
+      console.error("Error updating user language in database:", error);
+      set({ error: "Failed to sync language with server" });
     }
-  },
+  }, 500),
+  clearError: () => set({ error: null }),
 }));
 
 export default useLanguageStore;

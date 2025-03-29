@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import AuthBackground from "../../components/AuthBackground"; // Import component
 import { registerUser } from "../../api/userApi";
 import { useState } from "react";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 export default function Register() {
   const navigate = useNavigate();
+  const { t } = useTranslation(); // Sử dụng i18n
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,10 +21,10 @@ export default function Register() {
     }
     try {
       const result = await registerUser(username, email, password);
-      setMessage("Đăng ký thành công");
+      setMessage(t("registerSuccess"));
       navigate("/singin");
     } catch (error) {
-      setMessage(error.message || "Đăng ký thất bại");
+      setMessage(error.message || t("registerFail"));
     }
   };
 
@@ -32,8 +34,8 @@ export default function Register() {
       {/* Right Side - Register Form */}
       <div className="flex w-4/10 items-center justify-center p-10">
         <div className="w-full max-w-md space-y-6">
-          <h2 className="text-4xl font-bold text-white">REGISTER</h2>
-          <p className="text-gray-400">Create a new account</p>
+          <h2 className="text-4xl font-bold text-white">{t("register")}</h2>
+          <p className="text-gray-400">{t("createAccount")}</p>
 
           {/* Input */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,7 +75,7 @@ export default function Register() {
               type="submit"
               className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 p-3 font-semibold text-white transition duration-700 hover:from-purple-300"
             >
-              Register
+              {t("register")}
             </button>
           </form>
           {/* Thông báo */}
@@ -81,12 +83,12 @@ export default function Register() {
 
           {/* Link đăng nhập */}
           <p className="text-center text-xs text-gray-400">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <button
               onClick={() => navigate("/signin")}
               className="text-purple-400 underline"
             >
-              Sign In
+              {t("signIn")}
             </button>
           </p>
         </div>

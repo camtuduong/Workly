@@ -1,13 +1,20 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import useLanguageStore from "../store/useLanguageStore";
-import i18n from "../i18n";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { setLanguage, fetchUserLanguage } = useLanguageStore();
+  const { setLanguage } = useLanguageStore();
+
+  const updateLanguage = (language) => {
+    if (language) {
+      setLanguage(language);
+    } else {
+      setLanguage("en");
+    }
+  };
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -27,14 +34,19 @@ export function AuthProvider({ children }) {
           }
 
           const data = await res.json();
-          // console.log("Verify token response:", data);
           setUser(data.user);
-          // fetchUserLanguage(data.user.id);
+          updateLanguage(data.user.language);
         } catch (error) {
           console.error("Token verification failed:", error);
           setUser(null);
           localStorage.removeItem("user");
           localStorage.removeItem("token");
+          const browserLanguage = navigator.language.startsWith("vi")
+            ? "vi"
+            : "en";
+          const initialLanguage =
+            localStorage.getItem("language") || browserLanguage;
+          setLanguage(initialLanguage);
         }
       } else {
         const browserLanguage = navigator.language.startsWith("vi")
@@ -48,7 +60,7 @@ export function AuthProvider({ children }) {
     };
 
     verifyToken();
-  }, []);
+  }, [setLanguage]);
 
   const login = async (email, password) => {
     try {
@@ -64,41 +76,12 @@ export function AuthProvider({ children }) {
       }
 
       const data = await res.json();
-      // console.log("Login response:", data);
-
-      if (!data.user || !data.token) {
-        throw new Error("Invalid response from server: Missing user or token");
-      }
-
       setUser(data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
-
-      fetchUserLanguage(data.user.id);
+      updateLanguage(data.user.language);
     } catch (error) {
       console.error("Error logging in:", error.message);
-      throw error;
-    }
-  };
-
-  const register = async (username, email, password, language) => {
-    try {
-      const res = await fetch("http://localhost:8000/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, language }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
-
-      const data = await res.json();
-      console.log("Register response:", data);
-      return data;
-    } catch (error) {
-      console.error("Error registering user:", error.message);
       throw error;
     }
   };
@@ -110,7 +93,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

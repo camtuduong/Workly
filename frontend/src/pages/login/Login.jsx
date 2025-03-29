@@ -16,7 +16,7 @@ export default function SignIn() {
   // Kiểm tra nếu user đã đăng nhập thì chuyển hướng
   useEffect(() => {
     if (!loading && user) {
-      navigate("/"); // Hoặc navigate("/") nếu bạn muốn về trang chủ
+      navigate("/dashboard"); // Hoặc navigate("/") nếu bạn muốn về trang chủ
     }
   }, [loading, user, navigate]);
 
@@ -32,7 +32,7 @@ export default function SignIn() {
     try {
       await login(email, password); // Sử dụng login từ AuthContext
       setMessage(t("loginSuccess"));
-      navigate("/"); // Chuyển hướng về trang chủ
+      navigate("/dashboard"); // Chuyển hướng về trang chủ
     } catch (error) {
       setMessage(error.message || t("loginFailed"));
     } finally {

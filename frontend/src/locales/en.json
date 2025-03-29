@@ -1,13 +1,34 @@
 {
+  "loading": "Loading...",
   "signIn": "Sign In",
   "signInWithEmail": "Sign in with email address",
+  "email": "Email",
+  "emailRequired": "Email is required",
+  "emailInvalid": "Email is invalid",
+  "emailAlreadyExists": "Email already exists",
+  "register": "Register",
+  "registerWithEmail": "Register with email address",
+  "alreadyHaveAccount": "Already have an account?",
+  "createAccount": "Create an account",
+  "registerSuccess": "Registration successful!",
+  "registerFailed": "Registration failed. Please try again.",
   "password": "Password",
   "passwordTooShort": "Password must be at least 6 characters",
   "loginSuccess": "Login successful!",
   "loginFailed": "Login failed. Please try again.",
   "orContinueWith": "Or continue with",
-  "createAccount": "Create an account",
   "termsAndConditions": "By registering you agree to our",
   "termsAndConditionsLink": "Terms and Conditions",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "navbar": {
+    "boards": "Boards",
+    "english": "English",
+    "vietnamese": "Vietnamese",
+    "logout": "Logout"
+  },
+  "board": {
+    "title": "Board Title",
+    "addList": "Add a list",
+    "addCard": "Add a card"
+  }
 }
