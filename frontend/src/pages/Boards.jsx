@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-import { Link } from "react-router-dom";
-// import boardApi from "../api/boardApi";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  getBoards,
+  createBoard,
+  updateBoard,
+  deleteBoard,
+} from "../api/boardApi";
 import { SOCKET_URL } from "../api/config";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
-const Dashboard = () => {
+const Boards = () => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [socket, setSocket] = useState(null);
   const [newBoardTitle, setNewBoardTitle] = useState("");
@@ -18,7 +24,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
+      transports: ["polling"], // Chỉ sử dụng WebSocket, bỏ polling để kiểm tra
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -67,7 +73,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const data = await boardApi.getBoards();
+        const data = await getBoards();
         setBoards(data);
       } catch (error) {
         console.error("Error fetching boards:", error.message);
@@ -80,7 +86,9 @@ const Dashboard = () => {
   const handleCreateBoard = async () => {
     if (!newBoardTitle.trim()) return;
     try {
-      await boardApi.createBoard(newBoardTitle);
+      const token = localStorage.getItem("token");
+      console.log("Token before creating board:", token);
+      await createBoard(newBoardTitle);
       setNewBoardTitle("");
       setIsAddingBoard(false);
     } catch (error) {
@@ -95,7 +103,7 @@ const Dashboard = () => {
 
   const handleUpdateBoard = async (boardId) => {
     try {
-      await boardApi.updateBoard(boardId, editTitle);
+      await updateBoard(boardId, editTitle);
       setEditingBoardId(null);
       setEditTitle("");
     } catch (error) {
@@ -105,7 +113,7 @@ const Dashboard = () => {
 
   const handleDeleteBoard = async (boardId) => {
     try {
-      await boardApi.deleteBoard(boardId);
+      await deleteBoard(boardId);
     } catch (error) {
       console.error("Error deleting board:", error.message);
     }
@@ -113,12 +121,13 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     logout();
+    navigate("/signin");
   };
 
   return (
     <div className="app min-h-screen bg-[#1E1331] p-6 text-white">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t("dashboard")}</h1>
+        <h1 className="text-3xl font-bold">{t("boards")}</h1>
         <button
           onClick={handleLogout}
           className="rounded bg-red-500 px-4 py-2 text-white"
@@ -218,4 +227,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Boards;

@@ -22,7 +22,7 @@ export default function Register() {
     try {
       const result = await registerUser(username, email, password);
       setMessage(t("registerSuccess"));
-      navigate("/singin");
+      navigate("/signin");
     } catch (error) {
       setMessage(error.message || t("registerFail"));
     }

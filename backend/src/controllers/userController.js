@@ -1,6 +1,10 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+
+let io;
+const setIo = (socketIo) => {
+  io = socketIo;
+};
 
 // Kiểm tra user tồn tại
 const checkUser = async (req, res) => {
@@ -44,6 +48,15 @@ const registerUser = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Gửi sự kiện userRegistered đến tất cả client
+    io.emit("userRegistered", {
+      userId: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      language: newUser.language,
+    });
+
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(400).json({ message: "Error registering user", error });
@@ -62,6 +75,12 @@ const updateLanguage = async (req, res) => {
     user.language = language;
     await user.save();
 
+    // Gửi sự kiện userUpdated đến tất cả client
+    io.emit("userUpdated", {
+      userId: user._id,
+      language: user.language,
+    });
+
     res.json({ message: "Language updated successfully", language });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -71,19 +90,20 @@ const updateLanguage = async (req, res) => {
 // Lấy danh sách user
 const getAllUser = async (req, res) => {
   try {
-    const Users = await User.find().select("-password");
+    const users = await User.find().select("-password");
 
-    if (!Users.length) {
+    if (!users.length) {
       return res.status(404).json({ message: "No User Found" });
     }
 
-    res.json(Users);
+    res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
 };
 
 module.exports = {
+  setIo,
   getAllUser,
   checkUser,
   registerUser,

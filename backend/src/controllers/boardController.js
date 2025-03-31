@@ -1,113 +1,139 @@
 const Board = require("../models/Board");
-const User = require("../models/User");
+const mongoose = require("mongoose");
+
+let io;
+const setIo = (socketIo) => {
+  io = socketIo;
+};
 
 const createBoard = async (req, res) => {
-  const { title, description } = req.body;
-  const { userId } = req.user;
-
   try {
-    const board = new Board({
-      title,
-      description,
-      members: [{ userId, role: "admin" }],
-    });
+    const { title } = req.body;
+    console.log("req.user:", req.user); // Log để kiểm tra
+    const userId = req.user.id;
+
+    if (!title) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ message: "User ID not found in token" });
+    }
+
+    const board = new Board({ title, createdBy: userId });
     await board.save();
 
-    const user = await User.findById(userId);
-    user.boards.push(board._id);
-    await User.save();
+    console.log("Emitting boardCreated event:", board);
+    io.emit("boardCreated", board);
 
     res.status(201).json(board);
   } catch (error) {
-    console.error("Error creating board", error);
+    console.error("Error creating board:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-//lấy ds bảng
-const getBoards = async (req, res) => {
-  const { userId } = req.user;
+const getAllBoards = async (req, res) => {
   try {
-    const boards = await Board.find({ "members.userId": userId }).populate(
-      "lists"
-    );
-    res.json({ boards });
+    const userId = req.user.id;
+    const boards = await Board.find({ createdBy: userId }); // Chỉ lấy boards của user hiện tại
+    res.json(boards);
   } catch (error) {
-    console.error("Error fetching boards:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error fetching boards:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-//lấy một bảng
 const getBoard = async (req, res) => {
-  const { id } = res.params;
   try {
-    const board = await Board.findById(id)
-      .populate({
-        path: "lists",
-        populate: { path: "cards" },
-      })
-      .populate("members.userId");
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const board = await Board.findOne({ _id: id, createdBy: userId }).populate({
+      path: "lists",
+      populate: { path: "cards" },
+    });
+
     if (!board) {
-      return res.status(400).json({ message: "Board not found" });
+      return res
+        .status(404)
+        .json({ message: "Board not found or you don't have access" });
     }
+
     res.json(board);
   } catch (error) {
-    console.error("Error fetching board :", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error fetching board:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const updateBoard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+    const userId = req.user.id;
+
+    if (!title) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
+    const board = await Board.findOne({ _id: id, createdBy: userId });
+    if (!board) {
+      return res
+        .status(404)
+        .json({ message: "Board not found or you don't have access" });
+    }
+
+    board.title = title;
+    await board.save();
+
+    io.to(id).emit("boardUpdated", board);
+    io.emit("boardUpdated", board);
+
+    res.json(board);
+  } catch (error) {
+    console.error("Error updating board:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
 const deleteBoard = async (req, res) => {
-  const { id } = req.params;
   try {
-    const board = await Board.findById(id);
-    if (!board) return res.status(404).json({ message: "Board not found" });
-    const isAdmin = board.members.some(
-      (member) => member.userId.toString() === userId && member.role === "admin"
-    );
-    if (!isAdmin)
-      return res
-        .status(403)
-        .json({ message: "Only admin can delete the board" });
+    const { id } = req.params;
+    const userId = req.user.id;
 
-    await Board.deleteOne({ _id: id });
-    await User.updateMany({}, { $pull: { boards: id } });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid board ID" });
+    }
+
+    const board = await Board.findOne({ _id: id, createdBy: userId });
+    if (!board) {
+      return res
+        .status(404)
+        .json({ message: "Board not found or you don't have access" });
+    }
+
+    await board.deleteOne();
+
+    // Kiểm tra io trước khi emit
+    if (io) {
+      io.emit("boardDeleted", id);
+    } else {
+      console.warn("Socket.IO instance (io) is not initialized");
+    }
+
     res.json({ message: "Board deleted successfully" });
   } catch (error) {
-    console.error("Error fetching board :", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error deleting board:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-const addMemberToBoard = async (req, res) => {
-  const { id } = req.params;
-  const { userId } = req.body;
-
-  try {
-    const board = await Board.findById(id);
-    if (!board) return res.status(404).json({ message: "Board not found" });
-
-    if (board.members.some((member) => member.userId.toString() === userId))
-      return res.status(400).json({ message: "User already in board" });
-
-    board.members.push({ userId, role: "member" });
-    await board.save();
-
-    const user = await User.findById(userId);
-    user.boards.push(board._id);
-    await user.save();
-
-    res.json({ message: "Member added successfully", board });
-  } catch (error) {
-    console.error("Error adding member to board", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
 module.exports = {
+  setIo,
   createBoard,
+  getAllBoards,
   getBoard,
-  getBoards,
+  updateBoard,
   deleteBoard,
-  addMemberToBoard,
 };

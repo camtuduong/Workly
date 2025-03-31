@@ -63,3 +63,7 @@ export const updateLanguage = async (language) => {
     throw error.response?.data || { message: "Server error" };
   }
 };
+export const getAllUsers = async () => {
+  const response = await apiClient.get(`${USER_API}/`);
+  return response.data;
+};
