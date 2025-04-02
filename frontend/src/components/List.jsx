@@ -63,7 +63,7 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="list flex w-64 flex-col rounded bg-white text-gray-800 shadow"
+      className="list min-w-72 grow flex-col rounded bg-white text-gray-800 shadow"
     >
       {/* Phần tiêu đề (Title) */}
       <div className="title flex items-center justify-between px-3 py-2">

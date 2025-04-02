@@ -1,4 +1,3 @@
-// Board.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -398,85 +397,89 @@ const Board = () => {
       }}
     >
       <Drawer />
-      <div className="flex-1 p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">{board.title}</h1>
-          <button
-            onClick={handleDeleteBoard}
-            className="rounded bg-red-500 px-4 py-1 text-white"
-          >
-            {t("deleteBoard")}
-          </button>
-        </div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-white">
-            {t("onlineUsers")}
-          </h2>
-          <ul>
-            {onlineUsers.map((userId) => {
-              const user = users.find((u) => u._id === userId);
-              return (
-                <li key={userId} className="text-white">
-                  {user ? user.username : userId} ({t("online")})
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex items-start space-x-4">
-            <SortableContext
-              items={board.lists.map((list) => `list-${list._id}`)}
-              strategy={horizontalListSortingStrategy}
+      <div className="h-screen flex-1 flex-col">
+        <div className="h-24 flex-col p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white">{board.title}</h1>
+            <button
+              onClick={handleDeleteBoard}
+              className="rounded bg-red-500 px-4 py-1 text-white"
             >
-              {board.lists.map((list) => (
-                <List
-                  key={list._id}
-                  list={list}
-                  onAddCard={handleAddCard}
-                  onEditCard={handleEditCard}
-                  onDeleteCard={handleDeleteCard}
-                  onDeleteList={handleDeleteList}
-                />
-              ))}
-            </SortableContext>
-            {isAddingList ? (
-              <div className="w-64 rounded bg-gray-800 p-4">
-                <input
-                  type="text"
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
-                  placeholder={t("enterListTitle")}
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleAddList}
-                    className="rounded bg-blue-500 px-4 py-1 text-white"
-                  >
-                    {t("addList")}
-                  </button>
-                  <button
-                    onClick={() => setIsAddingList(false)}
-                    className="text-gray-400 hover:text-gray-200"
-                  >
-                    {t("cancel")}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsAddingList(true)}
-                className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
-              >
-                {t("addList")}
-              </button>
-            )}
+              {t("deleteBoard")}
+            </button>
           </div>
-        </DndContext>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-white">
+              {t("onlineUsers")}
+            </h2>
+            <ul>
+              {onlineUsers.map((userId) => {
+                const user = users.find((u) => u._id === userId);
+                return (
+                  <li key={userId} className="text-white">
+                    {user ? user.username : userId} ({t("online")})
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+        <div className="relative m-3 h-10/12 flex-row gap-3 overflow-y-hidden">
+          <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="absolute flex items-start space-x-4 overflow-x-auto pb-2">
+              <SortableContext
+                items={board.lists.map((list) => `list-${list._id}`)}
+                strategy={horizontalListSortingStrategy}
+              >
+                {board.lists.map((list) => (
+                  <List
+                    key={list._id}
+                    list={list}
+                    onAddCard={handleAddCard}
+                    onEditCard={handleEditCard}
+                    onDeleteCard={handleDeleteCard}
+                    onDeleteList={handleDeleteList}
+                  />
+                ))}
+              </SortableContext>
+              {isAddingList ? (
+                <div className="w-64 rounded bg-gray-800 p-4">
+                  <input
+                    type="text"
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                    className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
+                    placeholder={t("enterListTitle")}
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleAddList}
+                      className="rounded bg-blue-500 px-4 py-1 text-white"
+                    >
+                      {t("addList")}
+                    </button>
+                    <button
+                      onClick={() => setIsAddingList(false)}
+                      className="text-gray-400 hover:text-gray-200"
+                    >
+                      {t("cancel")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAddingList(true)}
+                  className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
+                >
+                  {t("addList")}
+                </button>
+              )}
+            </div>
+          </DndContext>
+        </div>
       </div>
     </div>
   );
