@@ -1,3 +1,4 @@
+// Board.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -21,7 +22,6 @@ import { getAllUsers } from "../api/userApi";
 import { SOCKET_URL } from "../api/config";
 import { useTranslation } from "react-i18next";
 
-// Phần còn lại của code giữ nguyên
 const Board = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -67,13 +67,17 @@ const Board = () => {
       }
     });
 
-    newSocket.on("connect_error", (error) => {
-      console.error("Connection error:", error.message);
-    });
-
     newSocket.on("boardUpdated", (updatedBoard) => {
       console.log("Board updated:", updatedBoard);
-      setBoard(updatedBoard);
+      if (updatedBoard && updatedBoard._id === id && updatedBoard.lists) {
+        updatedBoard.lists = updatedBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards || [],
+        }));
+        setBoard(updatedBoard);
+      } else {
+        console.error("Invalid board data received:", updatedBoard);
+      }
     });
 
     newSocket.on("boardDeleted", (boardId) => {
@@ -156,7 +160,8 @@ const Board = () => {
 
   const handleAddCard = async (listId, title) => {
     try {
-      await createCard(listId, title);
+      const response = await createCard(listId, title);
+      console.log("Card created:", response);
     } catch (error) {
       console.error("Error creating card:", error.message);
     }
@@ -180,9 +185,17 @@ const Board = () => {
 
   const handleDeleteList = async (listId) => {
     try {
-      await deleteList(listId);
+      const response = await deleteList(listId);
+      console.log("List deleted successfully:", response);
     } catch (error) {
-      console.error("Error deleting list:", error.message);
+      console.error(
+        "Error deleting list:",
+        error.response?.data || error.message,
+      );
+      alert(
+        "Failed to delete list: " +
+          (error.response?.data?.message || error.message),
+      );
     }
   };
 
@@ -199,21 +212,45 @@ const Board = () => {
 
     if (!over) return;
 
+    // Xử lý kéo thả list
     if (active.id.includes("list")) {
-      const oldIndex = board.lists.findIndex((list) => list._id === active.id);
-      const newIndex = board.lists.findIndex((list) => list._id === over.id);
+      console.log("Dragging list:", active.id);
+      const activeListId = active.id.replace("list-", "");
+      const overListId = over.id.replace("list-", "");
+
+      const oldIndex = board.lists.findIndex(
+        (list) => list._id === activeListId,
+      );
+      const newIndex = board.lists.findIndex((list) => list._id === overListId);
+
+      if (oldIndex === -1 || newIndex === -1) {
+        console.error("List not found:", { oldIndex, newIndex });
+        return;
+      }
+
+      const newLists = arrayMove(board.lists, oldIndex, newIndex);
+      const updatedBoard = { ...board, lists: newLists };
+      setBoard(updatedBoard);
 
       try {
-        await updateListPosition(active.id, newIndex);
+        await updateListPosition(activeListId, newIndex);
       } catch (error) {
         console.error("Error updating list position:", error.message);
+        setBoard(board);
       }
       return;
     }
 
-    const activeListId = active.data.current.listId;
-    const overListId = over.data.current?.listId || over.id;
-    const activeCardId = active.id;
+    // Xử lý kéo thả card
+    const activeListId = active.data.current?.listId;
+    const overListId =
+      over.data.current?.listId || over.id.replace("droppable-", "");
+    const activeCardId = active.id.replace("card-", "");
+
+    if (!activeListId || !overListId) {
+      console.error("Invalid list IDs:", { activeListId, overListId });
+      return;
+    }
 
     const activeListIndex = board.lists.findIndex(
       (list) => list._id === activeListId,
@@ -222,50 +259,107 @@ const Board = () => {
       (list) => list._id === overListId,
     );
 
+    if (activeListIndex === -1 || overListIndex === -1) {
+      console.error("List not found:", { activeListIndex, overListIndex });
+      return;
+    }
+
+    // Tìm card đang được kéo
+    const activeCard = board.lists[activeListIndex].cards.find(
+      (card) => card._id === activeCardId,
+    );
+    if (!activeCard) {
+      console.error("Active card not found:", activeCardId);
+      // Fetch lại board từ backend để đồng bộ dữ liệu
+      const updatedBoard = await getBoard(id);
+      setBoard(updatedBoard);
+      return;
+    }
+
     if (activeListId === overListId) {
-      const oldIndex = board.lists[activeListIndex].cards.findIndex(
+      // Kéo thả trong cùng một list
+      const activeListCards = board.lists[activeListIndex].cards;
+      const oldIndex = activeListCards.findIndex(
         (card) => card._id === activeCardId,
       );
-      const newIndex = board.lists[activeListIndex].cards.findIndex(
-        (card) => card._id === over.id,
+
+      // Kiểm tra xem over.id là card hay list
+      let newIndex;
+      const overCard = activeListCards.find(
+        (card) => card._id === over.id.replace("card-", ""),
       );
-      const newCards = arrayMove(
-        board.lists[activeListIndex].cards,
-        oldIndex,
-        newIndex,
-      );
+      if (overCard) {
+        // Nếu over.id là một card
+        newIndex = activeListCards.findIndex(
+          (card) => card._id === over.id.replace("card-", ""),
+        );
+      } else {
+        // Nếu over.id là list (khi list trống), đặt card vào vị trí cuối
+        newIndex = activeListCards.length - 1;
+      }
+
+      if (oldIndex === -1 || newIndex === -1) {
+        console.error("Card not found:", { oldIndex, newIndex });
+        return;
+      }
+
+      const newCards = arrayMove(activeListCards, oldIndex, newIndex);
       const newLists = [...board.lists];
       newLists[activeListIndex].cards = newCards;
       const updatedBoard = { ...board, lists: newLists };
       setBoard(updatedBoard);
 
       try {
-        await updateCardPosition(activeCardId, activeListId, newIndex);
+        await updateCardPosition({
+          cardId: activeCardId,
+          newListId: activeListId,
+          newPosition: newIndex,
+        });
       } catch (error) {
         console.error("Error updating card position:", error.message);
-        setBoard(board);
+        // Fetch lại board từ backend để đồng bộ dữ liệu
+        const updatedBoard = await getBoard(id);
+        setBoard(updatedBoard);
       }
     } else {
-      const card = board.lists[activeListIndex].cards.find(
-        (card) => card._id === activeCardId,
-      );
+      // Kéo thả sang list khác
       const newLists = [...board.lists];
       newLists[activeListIndex].cards = newLists[activeListIndex].cards.filter(
         (card) => card._id !== activeCardId,
       );
-      newLists[overListIndex].cards.push(card);
+
+      // Thêm card vào list mới
+      const overListCards = newLists[overListIndex].cards;
+      const overCard = overListCards.find(
+        (card) => card._id === over.id.replace("card-", ""),
+      );
+      let newPosition;
+      if (overCard) {
+        // Nếu over.id là một card, thêm vào vị trí của overCard
+        newPosition = overListCards.findIndex(
+          (card) => card._id === over.id.replace("card-", ""),
+        );
+        newLists[overListIndex].cards.splice(newPosition, 0, activeCard);
+      } else {
+        // Nếu over.id là list (list trống), thêm vào cuối
+        newPosition = overListCards.length;
+        newLists[overListIndex].cards.push(activeCard);
+      }
+
       const updatedBoard = { ...board, lists: newLists };
       setBoard(updatedBoard);
 
       try {
-        await updateCardPosition(
-          activeCardId,
-          overListId,
-          newLists[overListIndex].cards.length - 1,
-        );
+        await updateCardPosition({
+          cardId: activeCardId,
+          newListId: overListId,
+          newPosition: newPosition,
+        });
       } catch (error) {
         console.error("Error updating card position:", error.message);
-        setBoard(board);
+        // Fetch lại board từ backend để đồng bộ dữ liệu
+        const updatedBoard = await getBoard(id);
+        setBoard(updatedBoard);
       }
     }
   };
@@ -333,9 +427,9 @@ const Board = () => {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex space-x-4">
+          <div className="flex items-start space-x-4">
             <SortableContext
-              items={board.lists.map((list) => list._id)}
+              items={board.lists.map((list) => `list-${list._id}`)}
               strategy={horizontalListSortingStrategy}
             >
               {board.lists.map((list) => (
@@ -350,12 +444,12 @@ const Board = () => {
               ))}
             </SortableContext>
             {isAddingList ? (
-              <div className="w-64 rounded bg-gray-200 p-4">
+              <div className="w-64 rounded bg-gray-800 p-4">
                 <input
                   type="text"
                   value={newListTitle}
                   onChange={(e) => setNewListTitle(e.target.value)}
-                  className="mb-2 w-full rounded border p-2"
+                  className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
                   placeholder={t("enterListTitle")}
                 />
                 <div className="flex space-x-2">
@@ -367,7 +461,7 @@ const Board = () => {
                   </button>
                   <button
                     onClick={() => setIsAddingList(false)}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-gray-400 hover:text-gray-200"
                   >
                     {t("cancel")}
                   </button>
@@ -376,7 +470,7 @@ const Board = () => {
             ) : (
               <button
                 onClick={() => setIsAddingList(true)}
-                className="w-64 rounded bg-gray-200 p-4"
+                className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
               >
                 {t("addList")}
               </button>

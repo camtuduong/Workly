@@ -13,11 +13,13 @@ const createBoard = async (req, res) => {
     const userId = req.user.id;
 
     if (!title) {
-      return res.status(400).json({ message: "Title is required" });
+      return res.status(400).json({ message: "Vui lòng nhập Title" });
     }
 
     if (!userId) {
-      return res.status(401).json({ message: "User ID not found in token" });
+      return res
+        .status(401)
+        .json({ message: "Không thấy User ID trong token" });
     }
 
     const board = new Board({ title, createdBy: userId });

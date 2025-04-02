@@ -20,11 +20,12 @@ export const deleteCard = async (cardId) => {
   return response.data;
 };
 
-export const updateCardPosition = async (cardId, newListId, newPosition) => {
-  const response = await apiClient.put("/cards/position", {
-    cardId,
-    newListId,
-    newPosition,
+export const updateCardPosition = async (data) => {
+  console.log("Sending data to updateCardPosition:", data);
+  const response = await apiClient.put("/cards/position", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   return response.data;
 };

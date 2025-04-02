@@ -5,8 +5,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/", authMiddleware, cardController.createCard);
 router.get("/:id", authMiddleware, cardController.getCard);
+router.put("/position", authMiddleware, cardController.updateCardPosition);
+
 router.put("/:id", authMiddleware, cardController.updateCard);
 router.delete("/:id", authMiddleware, cardController.deleteCard);
-router.put("/position", authMiddleware, cardController.updateCardPosition);
 
 module.exports = router;

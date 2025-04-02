@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const Card = ({ card, onEditCard, onDeleteCard }) => {
   const { t } = useTranslation();
+
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
-      id: card._id,
-      data: { listId: card.listId },
+      id: `card-${card._id}`,
+      data: { cardId: card._id, listId: card.listId },
     });
 
   const style = {
@@ -17,67 +17,80 @@ const Card = ({ card, onEditCard, onDeleteCard }) => {
     transition,
   };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(card.title);
-
-  const handleEditSubmit = () => {
-    if (!editTitle.trim()) return;
-    onEditCard(card._id, editTitle);
-    setIsEditing(false);
-  };
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="card flex items-center justify-between rounded bg-white p-2 shadow"
+      className="card group flex items-center justify-between rounded bg-gray-700 p-2 shadow"
     >
-      {isEditing ? (
-        <div className="flex w-full flex-col space-y-2">
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            className="w-full rounded border p-1"
+      <div
+        {...listeners}
+        className="flex basis-[90%] cursor-grab items-center space-x-2 select-none"
+      >
+        <span className="text-sm text-white">{card.title}</span>
+      </div>
+      <div className="basis-[10%] cursor-pointer space-x-2">
+        <svg
+          className="hidden h-4 w-4 text-gray-400 transition-opacity duration-300 group-hover:block"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M4 6h16M4 12h16M4 18h16"
           />
-          <div className="flex space-x-2">
-            <button
-              onClick={handleEditSubmit}
-              className="rounded bg-blue-500 px-2 py-1 text-white"
-            >
-              {t("save")}
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              {t("cancel")}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <Link to={`/card/${card._id}`}>
-            <span className="hover:underline">{card.title}</span>
-          </Link>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-yellow-500 hover:text-yellow-700"
-            >
-              {t("edit")}
-            </button>
-            <button
-              onClick={() => onDeleteCard(card._id)}
-              className="text-red-500 hover:text-red-700"
-            >
-              {t("delete")}
-            </button>
-          </div>
-        </>
-      )}
+        </svg>
+
+        {/* <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEditCard();
+          }}
+          className="text-blue-400 hover:text-blue-300"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0l-1.414-1.414a2 2 0 010-2.828z"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteCard(card._id);
+          }}
+          className="text-red-400 hover:text-red-300"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button> */}
+      </div>
     </div>
   );
 };
