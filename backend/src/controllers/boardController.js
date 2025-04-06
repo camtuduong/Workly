@@ -42,8 +42,23 @@ const createBoard = async (req, res) => {
 const getAllBoards = async (req, res) => {
   try {
     const userId = req.user.id;
-    const boards = await Board.find({ createdBy: userId }); // Chỉ lấy boards của user hiện tại
-    res.json(boards);
+
+    const boards = await Board.find({ "members.userId": userId })
+      .select("title members createdBy")
+      .sort({ createdAt: -1 });
+
+    const boardsWithRole = boards.map((board) => {
+      const member = board.members.find((m) => m.userId.toString() === userId);
+
+      return {
+        _id: board._id,
+        title: board.title,
+        createdBy: board.createdBy,
+        role: member?.role || "",
+      };
+    });
+
+    res.json(boardsWithRole);
   } catch (error) {
     console.error("Error fetching boards:", error.message);
     res.status(500).json({ message: "Server Error" });
@@ -55,7 +70,10 @@ const getBoard = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const board = await Board.findOne({ _id: id, createdBy: userId }).populate({
+    const board = await Board.findOne({
+      _id: id,
+      "members.userId": userId,
+    }).populate({
       path: "lists",
       populate: { path: "cards" },
     });

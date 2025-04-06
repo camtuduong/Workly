@@ -8,13 +8,25 @@ import {
   FiGrid,
   FiUsers,
   FiSettings,
-  FiTable,
-  FiCalendar,
   FiChevronLeft,
   FiChevronRight,
   FiPlus,
   FiStar,
 } from "react-icons/fi";
+
+const RoleBadge = ({ role }) => (
+  <span
+    className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${
+      role === "admin"
+        ? "bg-green-600 text-white"
+        : role === "viewer"
+          ? "bg-gray-600 text-white"
+          : "bg-yellow-600 text-white"
+    }`}
+  >
+    {role}
+  </span>
+);
 
 const Drawer = ({ isOpen, toggleDrawer }) => {
   const [boards, setBoards] = useState([]);
@@ -24,27 +36,25 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   const [socket, setSocket] = useState(null);
   const [selectedBoardId, setSelectedBoardId] = useState("");
 
-  // Kết nối với WebSocket
+  const myBoards = boards.filter((board) => board.createdBy === user?._id);
+  const sharedBoards = boards.filter((board) => board.createdBy !== user?._id);
+
   useEffect(() => {
     const socketIo = io(SOCKET_URL);
     setSocket(socketIo);
 
     socketIo.on("boardCreated", (newBoard) => {
-      setBoards((prevBoards) => [...prevBoards, newBoard]);
+      setBoards((prev) => [...prev, newBoard]);
     });
 
     socketIo.on("boardUpdated", (updatedBoard) => {
-      setBoards((prevBoards) =>
-        prevBoards.map((board) =>
-          board._id === updatedBoard._id ? updatedBoard : board,
-        ),
+      setBoards((prev) =>
+        prev.map((b) => (b._id === updatedBoard._id ? updatedBoard : b)),
       );
     });
 
     socketIo.on("boardDeleted", (boardId) => {
-      setBoards((prevBoards) =>
-        prevBoards.filter((board) => board._id !== boardId),
-      );
+      setBoards((prev) => prev.filter((b) => b._id !== boardId));
     });
 
     return () => {
@@ -52,25 +62,20 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
     };
   }, []);
 
-  // Lấy danh sách boards từ API
   useEffect(() => {
     const fetchBoards = async () => {
       try {
         const data = await getBoards();
         setBoards(data || []);
-      } catch (error) {
-        console.error("Error fetching boards:", error);
+      } catch (err) {
+        console.error("Error fetching boards:", err);
       }
     };
 
-    if (user) {
-      fetchBoards();
-    }
+    if (user) fetchBoards();
   }, [user]);
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   const getBoardColor = (index) => {
     const colors = [
@@ -86,17 +91,14 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
     return colors[index % colors.length];
   };
 
-  // Hàm để lưu ID của board được chọn khi người dùng nhấn vào board
-  const handleSelectBoard = (boardId) => {
-    setSelectedBoardId(boardId);
+  const handleSelectBoard = (id) => {
+    setSelectedBoardId(id);
   };
 
-  // Hiển thị danh sách thành viên của tất cả các board nếu chưa chọn board nào
   const handleShowMembers = () => {
     if (selectedBoardId) {
       navigate(`/dashboard/board/${selectedBoardId}/members`);
     } else {
-      // Nếu chưa chọn board, dẫn tới trang thành viên của tất cả các board (hoặc một danh sách tổng hợp)
       navigate("/dashboard/boards/members");
     }
   };
@@ -112,18 +114,14 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
           {/* Header */}
           <div className="border-b border-gray-700 p-5">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-green-600 text-xl font-bold">
-                {user?.username?.charAt(0)?.toUpperCase() || "8"}
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-600 text-xl font-bold">
+                {user?.username?.charAt(0)?.toUpperCase() || "?"}
               </div>
               <div className="flex-1 overflow-hidden">
                 <h2 className="truncate text-lg font-semibold">
                   {user ? `${user.username}'s workspace` : "Workspace"}
                 </h2>
-                <div className="flex items-center">
-                  <span className="text-xs font-medium text-gray-400">
-                    Free
-                  </span>
-                </div>
+                <span className="text-xs text-gray-400">Free</span>
               </div>
               <button
                 onClick={toggleDrawer}
@@ -135,101 +133,138 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto p-3">
-            <div className="space-y-6">
-              {/* Main Navigation */}
-              <div className="space-y-1">
+          <div className="flex-1 space-y-6 overflow-y-auto p-3">
+            {/* Main nav */}
+            <div className="space-y-1">
+              <button
+                onClick={() => navigate("/dashboard/boards")}
+                className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
+                  isActive("/boards")
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <FiGrid className="mr-3 h-5 w-5" />
+                <span>Boards</span>
+              </button>
+
+              <button
+                onClick={handleShowMembers}
+                className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
+                  isActive(`/dashboard/board/${selectedBoardId}/members`)
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <FiUsers className="mr-3 h-5 w-5" />
+                <span>Members</span>
+              </button>
+
+              <button
+                onClick={() => navigate("/settings")}
+                className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
+                  isActive("/settings")
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <FiSettings className="mr-3 h-5 w-5" />
+                <span>Workspace settings</span>
+              </button>
+            </div>
+
+            {/* Board list */}
+            <div>
+              <div className="mb-2 flex items-center justify-between px-4">
+                <h3 className="text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                  Your Boards
+                </h3>
                 <button
                   onClick={() => navigate("/dashboard/boards")}
-                  className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                    isActive("/boards")
-                      ? "bg-gray-700 text-white"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                  }`}
+                  className="rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-white"
+                  title="Add new board"
                 >
-                  <FiGrid className="mr-3 h-5 w-5" />
-                  <span>Boards</span>
-                </button>
-
-                {/* Nút Members */}
-                <button
-                  onClick={handleShowMembers} // Sử dụng hàm handleShowMembers
-                  className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                    isActive(`/dashboard/board/${selectedBoardId}/members`)
-                      ? "bg-gray-700 text-white"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <FiUsers className="mr-3 h-5 w-5" />
-                  <span>Members</span>
-                </button>
-
-                <button
-                  onClick={() => navigate("/settings")}
-                  className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                    isActive("/settings")
-                      ? "bg-gray-700 text-white"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <FiSettings className="mr-3 h-5 w-5" />
-                  <span>Workspace settings</span>
+                  <FiPlus className="h-4 w-4" />
                 </button>
               </div>
 
-              {/* Boards List */}
-              <div>
-                <div className="mb-2 flex items-center justify-between px-4">
-                  <h3 className="text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                    Your boards
-                  </h3>
-                  <button
-                    onClick={() => navigate("/dashboard/boards")}
-                    className="rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-white"
-                    title="Add new board"
-                  >
-                    <FiPlus className="h-4 w-4" />
-                  </button>
-                </div>
+              <div className="max-h-64 space-y-1 overflow-y-auto pr-2">
+                {boards.length === 0 ? (
+                  <div className="px-4 py-3 text-center text-sm text-gray-400">
+                    No boards yet
+                  </div>
+                ) : (
+                  <>
+                    {/* My Boards */}
+                    {myBoards.length > 0 && (
+                      <>
+                        <div className="mt-3 mb-1 px-4 text-xs font-semibold text-gray-400 uppercase">
+                          My Boards
+                        </div>
+                        {myBoards.map((board, index) => {
+                          const myRole = board.role || "admin"; // ← lấy trực tiếp từ API
+                          return (
+                            <button
+                              key={board._id}
+                              onClick={() => {
+                                handleSelectBoard(board._id);
+                                navigate(`/dashboard/board/${board._id}`);
+                              }}
+                              className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+                                location.pathname ===
+                                `/dashboard/board/${board._id}`
+                                  ? "bg-gray-700 text-white"
+                                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                              }`}
+                            >
+                              <div
+                                className={`mr-3 h-5 w-5 rounded ${getBoardColor(index)}`}
+                              />
+                              <div className="flex flex-1 justify-between truncate">
+                                <span>{board.title}</span>
+                                <RoleBadge role={myRole} />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </>
+                    )}
 
-                <div className="max-h-64 space-y-1 overflow-y-auto pr-2">
-                  {boards.length === 0 ? (
-                    <div className="px-4 py-3 text-center text-sm text-gray-400">
-                      No boards yet
-                    </div>
-                  ) : (
-                    boards.map((board, index) => (
-                      <button
-                        key={board._id}
-                        onClick={() => {
-                          handleSelectBoard(board._id); // Lưu ID của board được chọn
-                          navigate(`/dashboard/board/${board._id}`); // Điều hướng đến board
-                        }}
-                        className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
-                          location.pathname === `/dashboard/board/${board._id}`
-                            ? "bg-gray-700 text-white"
-                            : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                        }`}
-                      >
-                        <div
-                          className={`mr-3 h-5 w-5 rounded ${getBoardColor(index)}`}
-                        />
-                        <span className="flex-1 truncate">{board.title}</span>
-                        <FiStar
-                          className="h-4 w-4 text-gray-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-yellow-400"
-                          title="Star this board"
-                        />
-                      </button>
-                    ))
-                  )}
-                </div>
+                    {/* Shared Boards */}
+                    {sharedBoards.map((board, index) => {
+                      const myRole = board.role || "member";
+                      return (
+                        <button
+                          key={board._id}
+                          onClick={() => {
+                            handleSelectBoard(board._id);
+                            navigate(`/dashboard/board/${board._id}`);
+                          }}
+                          className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+                            location.pathname ===
+                            `/dashboard/board/${board._id}`
+                              ? "bg-gray-700 text-white"
+                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                          }`}
+                        >
+                          <div
+                            className={`mr-3 h-5 w-5 rounded ${getBoardColor(index + 100)}`}
+                          />
+                          <div className="flex flex-1 justify-between truncate">
+                            <span>{board.title}</span>
+                            <RoleBadge role={myRole} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Vertical toggle button for closed drawer */}
       {!isOpen && (
         <button
           onClick={toggleDrawer}
