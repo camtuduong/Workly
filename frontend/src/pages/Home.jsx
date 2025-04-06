@@ -27,7 +27,7 @@ const Home = () => {
           <div className="mt-6 space-x-4">
             {user ? (
               <button
-                onClick={() => navigate("/boards")}
+                onClick={() => navigate("/dashboard/boards")}
                 className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-400 p-3 font-semibold text-white hover:from-blue-200"
               >
                 View Your Boards

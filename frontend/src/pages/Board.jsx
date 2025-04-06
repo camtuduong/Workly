@@ -389,16 +389,16 @@ const Board = () => {
 
   return (
     <div
-      className="flex min-h-screen"
+      className="flex h-screen overflow-y-hidden"
       style={{
         backgroundImage: `url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      <Drawer />
-      <div className="h-screen flex-1 flex-col">
-        <div className="h-24 flex-col p-4">
+      <div className="flex flex-1 flex-col">
+        {/* header */}
+        <div className="h-[120px] flex-none p-4">
           <div className="mb-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">{board.title}</h1>
             <button
@@ -424,61 +424,65 @@ const Board = () => {
             </ul>
           </div>
         </div>
-        <div className="relative m-3 h-10/12 flex-row gap-3 overflow-y-hidden">
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="absolute flex items-start space-x-4 overflow-x-auto pb-2">
-              <SortableContext
-                items={board.lists.map((list) => `list-${list._id}`)}
-                strategy={horizontalListSortingStrategy}
-              >
-                {board.lists.map((list) => (
-                  <List
-                    key={list._id}
-                    list={list}
-                    onAddCard={handleAddCard}
-                    onEditCard={handleEditCard}
-                    onDeleteCard={handleDeleteCard}
-                    onDeleteList={handleDeleteList}
-                  />
-                ))}
-              </SortableContext>
-              {isAddingList ? (
-                <div className="w-64 rounded bg-gray-800 p-4">
-                  <input
-                    type="text"
-                    value={newListTitle}
-                    onChange={(e) => setNewListTitle(e.target.value)}
-                    className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
-                    placeholder={t("enterListTitle")}
-                  />
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handleAddList}
-                      className="rounded bg-blue-500 px-4 py-1 text-white"
-                    >
-                      {t("addList")}
-                    </button>
-                    <button
-                      onClick={() => setIsAddingList(false)}
-                      className="text-gray-400 hover:text-gray-200"
-                    >
-                      {t("cancel")}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsAddingList(true)}
-                  className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
+
+        {/* Body + scroll */}
+        <div className="min-h-0 min-w-0 flex-1">
+          <div className="flex h-full min-w-max overflow-x-auto overflow-y-hidden px-3 pb-3">
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex min-w-max items-start gap-4">
+                <SortableContext
+                  items={board.lists.map((list) => `list-${list._id}`)}
+                  strategy={horizontalListSortingStrategy}
                 >
-                  {t("addList")}
-                </button>
-              )}
-            </div>
-          </DndContext>
+                  {board.lists.map((list) => (
+                    <List
+                      key={list._id}
+                      list={list}
+                      onAddCard={handleAddCard}
+                      onEditCard={handleEditCard}
+                      onDeleteCard={handleDeleteCard}
+                      onDeleteList={handleDeleteList}
+                    />
+                  ))}
+                </SortableContext>
+                {isAddingList ? (
+                  <div className="w-64 rounded bg-gray-800 p-4">
+                    <input
+                      type="text"
+                      value={newListTitle}
+                      onChange={(e) => setNewListTitle(e.target.value)}
+                      className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
+                      placeholder={t("enterListTitle")}
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleAddList}
+                        className="rounded bg-blue-500 px-4 py-1 text-white"
+                      >
+                        {t("addList")}
+                      </button>
+                      <button
+                        onClick={() => setIsAddingList(false)}
+                        className="text-gray-400 hover:text-gray-200"
+                      >
+                        {t("cancel")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingList(true)}
+                    className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
+                  >
+                    {t("addList")}
+                  </button>
+                )}
+              </div>
+            </DndContext>
+          </div>
         </div>
       </div>
     </div>

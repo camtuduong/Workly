@@ -199,7 +199,7 @@ const Boards = () => {
               </div>
             ) : (
               <div className="flex flex-col space-y-2">
-                <Link to={`/board/${board._id}`}>
+                <Link to={`../board/${board._id}`}>
                   <h2 className="text-xl font-semibold text-purple-400 hover:underline">
                     {board.title}
                   </h2>

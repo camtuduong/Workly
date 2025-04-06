@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     language: { type: String, default: "en" },
     boards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
+    refreshToken: { type: String },
   },
   { timestamps: true }
 );

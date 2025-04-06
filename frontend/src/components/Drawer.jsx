@@ -13,8 +13,7 @@ import {
   FiStar,
 } from "react-icons/fi";
 
-const Drawer = () => {
-  const [isOpen, setIsOpen] = useState(true);
+const Drawer = ({ isOpen, toggleDrawer }) => {
   const [boards, setBoards] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -41,10 +40,6 @@ const Drawer = () => {
     }
   }, [user]);
 
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-  };
-
   const isActive = (path) => {
     return location.pathname === path;
   };
@@ -64,7 +59,7 @@ const Drawer = () => {
   };
 
   return (
-    <div className="relative flex h-screen">
+    <div className="fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)]">
       {/* Drawer content */}
       <div
         className={`h-full bg-gray-900 text-white transition-all duration-300 ${

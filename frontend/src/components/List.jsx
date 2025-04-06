@@ -63,113 +63,70 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="list min-w-72 grow flex-col rounded bg-white text-gray-800 shadow"
+      className="flex max-h-[calc(100vh-200px)] w-72 min-w-[18rem] flex-col rounded bg-white text-gray-800 shadow"
     >
-      {/* Phần tiêu đề (Title) */}
-      <div className="title flex items-center justify-between px-3 py-2">
-        <h3
-          {...listeners}
-          className="basis-[90%] cursor-grab text-base font-semibold"
-        >
-          {list.title || t("untitledList")}
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2">
+        <h3 {...listeners} className="cursor-grab text-base font-semibold">
+          {list.title || "Untitled"}
         </h3>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("Delete button clicked at:", new Date().toISOString());
-            console.log("Calling onDeleteList with listId:", list._id);
-            onDeleteList(list._id);
-          }}
-          className="basis-[10%] cursor-pointer text-right text-gray-400 hover:text-gray-200"
+          onClick={() => onDeleteList(list._id)}
+          className="text-gray-400 hover:text-gray-600"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          ×
         </button>
       </div>
 
-      {/* Phần danh sách card (Cards) */}
-      <div ref={setDroppableRef} className="cards flex-col space-y-2 p-3">
-        {list.cards.map((card) => (
-          <Card
-            key={card._id}
-            card={card}
-            onEditCard={onEditCard}
-            onDeleteCard={onDeleteCard}
-          />
-        ))}
+      {/* Scroll Cards */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div
+          ref={setDroppableRef}
+          className="cards flex-1 space-y-2 overflow-x-hidden overflow-y-auto p-3"
+        >
+          {list.cards.map((card) => (
+            <Card
+              key={card._id}
+              card={card}
+              onEditCard={onEditCard}
+              onDeleteCard={onDeleteCard}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Phần thêm card (Add Card) */}
-      <div className="add-card mt-auto px-3 py-2" ref={addCardRef}>
+      {/* Add Card */}
+      <div className="border-t px-3 py-2" ref={addCardRef}>
         {isAddingCard ? (
-          <div>
+          <>
             <textarea
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
-              className="w-full resize-none rounded border bg-gray-700 p-2 text-sm text-white placeholder-gray-400"
-              placeholder={t("enterCardTitle")}
-              rows={3}
+              className="w-full resize-none rounded bg-gray-700 p-2 text-sm text-white"
+              placeholder="Enter card title..."
+              rows={2}
             />
-            <div className="mt-2 flex space-x-2">
+            <div className="mt-1 flex gap-2">
               <button
                 onClick={handleAddCardSubmit}
-                className="px-3A rounded bg-green-500 py-1 text-sm text-white hover:bg-green-600"
+                className="rounded bg-green-500 px-3 py-1 text-sm text-white"
               >
-                {t("addCard")}
+                Add
               </button>
               <button
                 onClick={() => setIsAddingCard(false)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-gray-400 hover:text-gray-600"
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                ✕
               </button>
             </div>
-          </div>
+          </>
         ) : (
           <button
             onClick={() => setIsAddingCard(true)}
-            className="flex w-full items-center space-x-2 rounded px-2 py-1 text-sm text-gray-400 hover:bg-gray-700"
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span>{t("addCard")}</span>
+            <span className="text-lg">＋</span> Add Card
           </button>
         )}
       </div>

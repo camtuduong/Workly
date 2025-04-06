@@ -10,12 +10,11 @@ export default function NavbarIn() {
 
   return (
     <div>
-      {" "}
       {/* Top Navigation Bar */}
       <header
-        className={`flex items-center justify-between px-4 py-2 ${
+        className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center justify-between px-4 shadow-sm ${
           theme === "dark" ? "bg-[#2a1c4a]" : "bg-white"
-        } z-10 shadow-sm`}
+        }`}
       >
         <div className="flex items-center">
           {/* App icon */}

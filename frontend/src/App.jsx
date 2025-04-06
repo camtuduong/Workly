@@ -8,6 +8,7 @@ import Boards from "./pages/Boards";
 import Board from "./pages/Board";
 import CardDetail from "./pages/CardDetail";
 import PrivateRoute from "./components/PrivateRoute";
+import DashboardLayout from "./pages/layouts/DashboardLayout";
 
 const App = () => {
   return (
@@ -17,38 +18,21 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Route cha dùng layout Dashboard */}
           <Route
             path="/dashboard"
             element={
               <PrivateRoute>
-                <Dashboard />
+                <DashboardLayout />
               </PrivateRoute>
             }
-          />
-          <Route
-            path="/boards"
-            element={
-              <PrivateRoute>
-                <Boards />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/board/:id"
-            element={
-              <PrivateRoute>
-                <Board />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/card/:id"
-            element={
-              <PrivateRoute>
-                <CardDetail />
-              </PrivateRoute>
-            }
-          />
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="boards" element={<Boards />} />
+            <Route path="board/:id" element={<Board />} />
+            <Route path="card/:id" element={<CardDetail />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </Router>
