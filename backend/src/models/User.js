@@ -6,7 +6,19 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     language: { type: String, default: "en" },
-    boards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
+    boards: [
+      {
+        boardId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Board",
+        },
+        role: {
+          type: String,
+          enum: ["admin", "member", "viewer"],
+          default: "member",
+        },
+      },
+    ],
     refreshToken: { type: String },
   },
   { timestamps: true }

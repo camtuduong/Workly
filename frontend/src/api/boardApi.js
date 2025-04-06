@@ -36,16 +36,27 @@ export const getBoardMembers = async (boardId) => {
   return response.data;
 };
 
-export const addMember = async (boardId, memberId) => {
-  const response = await apiClient.put(`/boards/${boardId}/members`, {
+export const addMember = async (boardId, memberId, role = "member") => {
+  const response = await apiClient.post(`/boards/${boardId}/members`, {
     memberId,
+    role,
   });
   return response.data;
 };
 
+export const updateMemberRole = async (boardId, memberId, newRole) => {
+  const response = await apiClient.put(
+    `/boards/${boardId}/members/${memberId}/role`,
+    {
+      role: newRole,
+    },
+  );
+  return response.data;
+};
+
 export const removeMember = async (boardId, memberId) => {
-  const response = await apiClient.put(`/boards/${boardId}/members/remove`, {
-    memberId,
-  });
+  const response = await apiClient.delete(
+    `/boards/${boardId}/members/${memberId}`,
+  );
   return response.data;
 };
