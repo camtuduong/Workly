@@ -10,4 +10,16 @@ router.post("/", authMiddleware, boardController.createBoard);
 router.put("/:id", authMiddleware, boardController.updateBoard);
 router.delete("/:id", authMiddleware, boardController.deleteBoard);
 
+//members
+router.get(
+  "/:boardId/members",
+  authMiddleware,
+  boardController.getBoardMembers
+);
+router.put("/:boardId/members", authMiddleware, boardController.addMember);
+router.put(
+  "/:boardId/members/remove",
+  authMiddleware,
+  boardController.removeMember
+);
 module.exports = router;

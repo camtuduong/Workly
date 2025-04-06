@@ -9,6 +9,7 @@ import Board from "./pages/Board";
 import CardDetail from "./pages/CardDetail";
 import PrivateRoute from "./components/PrivateRoute";
 import DashboardLayout from "./pages/layouts/DashboardLayout";
+import BoardMembers from "./components/BoardMembers";
 
 const App = () => {
   return (
@@ -31,6 +32,8 @@ const App = () => {
             <Route index element={<Dashboard />} />
             <Route path="boards" element={<Boards />} />
             <Route path="board/:id" element={<Board />} />
+            <Route path="boards/members" element={<BoardMembers />} />
+            <Route path="board/:boardId/members" element={<BoardMembers />} />
             <Route path="card/:id" element={<CardDetail />} />
           </Route>
         </Routes>

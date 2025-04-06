@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getBoards } from "../api/boardApi";
+import { io } from "socket.io-client";
+import { SOCKET_URL } from "../api/config";
 import {
   FiGrid,
   FiUsers,
@@ -18,18 +21,43 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [socket, setSocket] = useState(null);
+  const [selectedBoardId, setSelectedBoardId] = useState("");
 
+  // Kết nối với WebSocket (Socket.IO)
+  useEffect(() => {
+    const socketIo = io(SOCKET_URL);
+    setSocket(socketIo);
+
+    socketIo.on("boardCreated", (newBoard) => {
+      setBoards((prevBoards) => [...prevBoards, newBoard]);
+    });
+
+    socketIo.on("boardUpdated", (updatedBoard) => {
+      setBoards((prevBoards) =>
+        prevBoards.map((board) =>
+          board._id === updatedBoard._id ? updatedBoard : board,
+        ),
+      );
+    });
+
+    socketIo.on("boardDeleted", (boardId) => {
+      setBoards((prevBoards) =>
+        prevBoards.filter((board) => board._id !== boardId),
+      );
+    });
+
+    return () => {
+      socketIo.disconnect();
+    };
+  }, []);
+
+  // Lấy danh sách boards từ API
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:8000/api/boards", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        setBoards(data.boards || []);
+        const data = await getBoards();
+        setBoards(data || []);
       } catch (error) {
         console.error("Error fetching boards:", error);
       }
@@ -58,9 +86,23 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
     return colors[index % colors.length];
   };
 
+  // Hàm để lưu ID của board được chọn khi người dùng nhấn vào board
+  const handleSelectBoard = (boardId) => {
+    setSelectedBoardId(boardId);
+  };
+
+  // Hiển thị danh sách thành viên của tất cả các board nếu chưa chọn board nào
+  const handleShowMembers = () => {
+    if (selectedBoardId) {
+      navigate(`/dashboard/board/${selectedBoardId}/members`);
+    } else {
+      // Nếu chưa chọn board, dẫn tới trang thành viên của tất cả các board (hoặc một danh sách tổng hợp)
+      navigate("/dashboard/boards/members");
+    }
+  };
+
   return (
     <div className="fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)]">
-      {/* Drawer content */}
       <div
         className={`h-full bg-gray-900 text-white transition-all duration-300 ${
           isOpen ? "w-72" : "w-0"
@@ -98,7 +140,7 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
               {/* Main Navigation */}
               <div className="space-y-1">
                 <button
-                  onClick={() => navigate("/boards")}
+                  onClick={() => navigate("/dashboard/boards")}
                   className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
                     isActive("/boards")
                       ? "bg-gray-700 text-white"
@@ -109,10 +151,11 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                   <span>Boards</span>
                 </button>
 
+                {/* Nút Members */}
                 <button
-                  onClick={() => navigate("/members")}
+                  onClick={handleShowMembers} // Sử dụng hàm handleShowMembers
                   className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                    isActive("/members")
+                    isActive(`/dashboard/board/${selectedBoardId}/members`)
                       ? "bg-gray-700 text-white"
                       : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
@@ -134,37 +177,6 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                 </button>
               </div>
 
-              {/* Workspace Views */}
-              <div>
-                <h3 className="mb-2 px-4 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  Workspace views
-                </h3>
-                <div className="space-y-1">
-                  <button
-                    onClick={() => navigate("/table")}
-                    className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                      isActive("/table")
-                        ? "bg-gray-700 text-white"
-                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    }`}
-                  >
-                    <FiTable className="mr-3 h-5 w-5" />
-                    <span>Table</span>
-                  </button>
-                  <button
-                    onClick={() => navigate("/calendar")}
-                    className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                      isActive("/calendar")
-                        ? "bg-gray-700 text-white"
-                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    }`}
-                  >
-                    <FiCalendar className="mr-3 h-5 w-5" />
-                    <span>Calendar</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Boards List */}
               <div>
                 <div className="mb-2 flex items-center justify-between px-4">
@@ -172,7 +184,7 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                     Your boards
                   </h3>
                   <button
-                    onClick={() => navigate("/boards")}
+                    onClick={() => navigate("/dashboard/boards")}
                     className="rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-white"
                     title="Add new board"
                   >
@@ -189,9 +201,12 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                     boards.map((board, index) => (
                       <button
                         key={board._id}
-                        onClick={() => navigate(`/board/${board._id}`)}
+                        onClick={() => {
+                          handleSelectBoard(board._id); // Lưu ID của board được chọn
+                          navigate(`/dashboard/board/${board._id}`); // Điều hướng đến board
+                        }}
                         className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
-                          location.pathname === `/board/${board._id}`
+                          location.pathname === `/dashboard/board/${board._id}`
                             ? "bg-gray-700 text-white"
                             : "text-gray-300 hover:bg-gray-800 hover:text-white"
                         }`}
@@ -210,13 +225,6 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-gray-700 p-4">
-            <button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2.5 text-sm font-medium text-white shadow transition-all hover:from-purple-700 hover:to-pink-700 hover:shadow-lg">
-              Try Premium Free
-            </button>
           </div>
         </div>
       </div>
