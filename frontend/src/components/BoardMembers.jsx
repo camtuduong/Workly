@@ -5,31 +5,45 @@ import {
   removeMember,
   updateMemberRole,
   addMember,
-} from "../api/boardApi"; // Giả sử bạn đã tạo API này
+} from "../api/boardApi";
+import { io } from "socket.io-client";
+import { SOCKET_URL } from "../api/config";
 
 const BoardMembers = () => {
-  const { boardId } = useParams(); // Nhận boardId từ URL
+  const { boardId } = useParams();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newMemberId, setNewMemberId] = useState(""); // Để lưu ID của thành viên mới
-  const [role, setRole] = useState("member"); // Role của thành viên mới
+  const [newMemberId, setNewMemberId] = useState("");
+  const [role, setRole] = useState("member");
 
-  // Lấy danh sách thành viên của board
   useEffect(() => {
-    const fetchMembers = async () => {
-      setLoading(true);
-      try {
-        const data = await getBoardMembers(boardId);
-        setMembers(data);
-      } catch (error) {
-        console.error("Error fetching members:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMembers();
   }, [boardId]);
+
+  useEffect(() => {
+    const socketIo = io(SOCKET_URL);
+    socketIo.emit("joinBoard", boardId);
+
+    socketIo.on("membersChanged", () => {
+      fetchMembers(); // reload khi có thay đổi từ socket
+    });
+
+    return () => {
+      socketIo.emit("leaveBoard", boardId);
+      socketIo.disconnect();
+    };
+  }, [boardId]);
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
+      const data = await getBoardMembers(boardId);
+      setMembers(data);
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdateRole = async (userId, newRole) => {
     try {
@@ -65,8 +79,8 @@ const BoardMembers = () => {
       }
 
       const newMember = await addMember(boardId, newMemberId, role);
-      setMembers([...members, newMember]); // Thêm thành viên mới vào danh sách
-      setNewMemberId(""); // Reset input field
+      setMembers([...members, newMember]);
+      setNewMemberId("");
       alert("Member added successfully");
     } catch (error) {
       console.error("Error adding member:", error);
@@ -111,28 +125,35 @@ const BoardMembers = () => {
           {members.map((member) => (
             <li
               key={member.userId}
-              className="mb-2 flex items-center justify-between rounded bg-gray-300 p-2"
+              className="mb-2 flex flex-col rounded bg-gray-300 p-3"
             >
-              <span>{member.userId}</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{member.username}</p>
+                  <p className="text-sm text-gray-700">{member.email}</p>
+                </div>
 
-              <select
-                value={member.role}
-                onChange={(e) =>
-                  handleUpdateRole(member.userId, e.target.value)
-                }
-                className="rounded bg-gray-200 p-1"
-              >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-                <option value="viewer">Viewer</option>
-              </select>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={member.role}
+                    onChange={(e) =>
+                      handleUpdateRole(member.userId, e.target.value)
+                    }
+                    className="rounded bg-gray-200 p-1"
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
 
-              <button
-                onClick={() => handleRemoveMember(member.userId)}
-                className="text-red-500 hover:text-red-700"
-              >
-                Remove
-              </button>
+                  <button
+                    onClick={() => handleRemoveMember(member.userId)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
             </li>
           ))}
         </ul>

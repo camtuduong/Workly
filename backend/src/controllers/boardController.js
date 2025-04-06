@@ -138,150 +138,143 @@ const deleteBoard = async (req, res) => {
 //member
 const getBoardMembers = async (req, res) => {
   try {
-    const { boardId } = req.params;
-    const board = await Board.findById(boardId).populate(
-      "members",
-      "-password"
-    );
-
+    const board = await Board.findById(req.params.boardId);
     if (!board) return res.status(404).json({ message: "Board not found" });
 
-    res.json(board.members);
+    const members = await Promise.all(
+      board.members.map(async (member) => {
+        const user = await User.findById(member.userId);
+        return {
+          userId: member.userId,
+          role: member.role,
+          username: user?.username || "Unknown",
+          email: user?.email || "Unknown",
+        };
+      })
+    );
+
+    res.json(members);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 const addMember = async (req, res) => {
-  const { boardId } = req.params;
-  const { memberId, role } = req.body; // Role được truyền vào có thể là "member", "admin", hoặc "viewer"
-  const userId = req.user.id;
+  try {
+    const { boardId } = req.params;
+    const { memberId, role } = req.body;
+    const userId = req.user.id;
 
-  const board = await Board.findById(boardId);
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: "Board not found" });
 
-  if (!board) {
-    return res.status(404).json({ message: "Board not found" });
+    const isAdmin = board.members.some(
+      (member) => member.userId.toString() === userId && member.role === "admin"
+    );
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to add members" });
+    }
+
+    const existingMember = board.members.find(
+      (member) => member.userId.toString() === memberId
+    );
+    if (existingMember) {
+      return res
+        .status(400)
+        .json({ message: "Member already exists in the board" });
+    }
+
+    board.members.push({ userId: memberId, role: role || "member" });
+    await board.save();
+
+    const member = await User.findById(memberId);
+    if (!member) return res.status(404).json({ message: "User not found" });
+
+    member.boards.push({ boardId: board._id, role: role || "member" });
+    await member.save();
+
+    io.to(boardId).emit("membersChanged");
+
+    res.status(200).json({ message: "Member added successfully", board });
+  } catch (error) {
+    console.error("Error adding member:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
-
-  // Chỉ admin mới có quyền thêm thành viên
-  const currentUser = await User.findById(userId);
-  const isAdmin = board.members.some(
-    (member) => member.userId.toString() === userId && member.role === "admin"
-  );
-
-  if (!isAdmin) {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to add members" });
-  }
-
-  // Kiểm tra nếu thành viên đã có trong board
-  const existingMember = board.members.find(
-    (member) => member.userId.toString() === memberId
-  );
-
-  if (existingMember) {
-    return res
-      .status(400)
-      .json({ message: "Member already exists in the board" });
-  }
-
-  // Thêm thành viên vào board
-  board.members.push({ userId: memberId, role: role || "member" });
-  await board.save();
-
-  // Cập nhật thông tin board cho user mới
-  const member = await User.findById(memberId);
-  if (!member) {
-    return res.status(404).json({ message: "User not found" });
-  }
-
-  // Cập nhật lại thông tin boards mà người dùng này tham gia và role của họ
-  member.boards.push({ boardId: board._id, role: role || "member" });
-  await member.save();
-
-  res.status(200).json({ message: "Member added successfully", board });
 };
 
 const removeMember = async (req, res) => {
-  const { boardId, memberId } = req.params;
-  const userId = req.user.id;
+  try {
+    const { boardId, memberId } = req.params;
+    const userId = req.user.id;
 
-  // Lấy thông tin board
-  const board = await Board.findById(boardId);
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: "Board not found" });
 
-  if (!board) {
-    return res.status(404).json({ message: "Board not found" });
+    const isAdmin = board.members.some(
+      (member) => member.userId.toString() === userId && member.role === "admin"
+    );
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to remove members" });
+    }
+
+    const memberToRemove = board.members.find(
+      (member) => member.userId.toString() === memberId
+    );
+    if (!memberToRemove) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    if (memberToRemove.role === "admin" && userId !== memberId) {
+      return res
+        .status(400)
+        .json({ message: "You cannot remove another admin" });
+    }
+
+    if (userId === memberId) {
+      return res.status(400).json({ message: "You cannot remove yourself" });
+    }
+
+    board.members = board.members.filter(
+      (member) => member.userId.toString() !== memberId
+    );
+    await board.save();
+
+    io.to(boardId).emit("membersChanged");
+
+    res.status(200).json({ message: "Member removed successfully", board });
+  } catch (error) {
+    console.error("Error removing member:", error.message);
+    res.status(500).json({ message: "Server Error" });
   }
-
-  // Kiểm tra nếu người thực hiện có quyền admin
-  const isAdmin = board.members.some(
-    (member) => member.userId.toString() === userId && member.role === "admin"
-  );
-
-  if (!isAdmin) {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to remove members" });
-  }
-
-  // Kiểm tra nếu người bị xóa là admin
-  const memberToRemove = board.members.find(
-    (member) => member.userId.toString() === memberId
-  );
-
-  if (!memberToRemove) {
-    return res.status(404).json({ message: "Member not found" });
-  }
-
-  // Nếu người bị xóa là admin, và không phải chính mình thì không thể xóa
-  if (memberToRemove.role === "admin" && userId !== memberId) {
-    return res.status(400).json({ message: "You cannot remove another admin" });
-  }
-
-  // Nếu người muốn xóa chính mình thì cũng không được phép
-  if (userId === memberId) {
-    return res.status(400).json({ message: "You cannot remove yourself" });
-  }
-
-  // Tiến hành xóa thành viên khỏi board
-  board.members = board.members.filter(
-    (member) => member.userId.toString() !== memberId
-  );
-
-  await board.save();
-
-  res.status(200).json({ message: "Member removed successfully", board });
 };
 
 const updateMemberRole = async (req, res) => {
   try {
-    const { boardId, memberId } = req.params; // Lấy boardId và memberId từ URL
-    const { role } = req.body; // Lấy role từ body yêu cầu
+    const { boardId, memberId } = req.params;
+    const { role } = req.body;
 
     if (!role || !["admin", "member", "viewer"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" }); // Kiểm tra role hợp lệ
+      return res.status(400).json({ message: "Invalid role" });
     }
 
-    // Tìm board trong cơ sở dữ liệu
     const board = await Board.findById(boardId);
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
+    if (!board) return res.status(404).json({ message: "Board not found" });
 
-    // Kiểm tra quyền admin
     const isAdmin = board.members.some(
       (member) =>
         member.userId.toString() === req.user.id && member.role === "admin"
     );
-
     if (!isAdmin) {
       return res
         .status(403)
         .json({ message: "You are not authorized to update member roles" });
     }
 
-    // Tìm thành viên trong board để cập nhật role
     const member = board.members.find(
       (member) => member.userId.toString() === memberId
     );
@@ -289,9 +282,10 @@ const updateMemberRole = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    // Cập nhật role cho thành viên
     member.role = role;
-    await board.save(); // Lưu lại thay đổi vào cơ sở dữ liệu
+    await board.save();
+
+    io.to(boardId).emit("membersChanged");
 
     res.status(200).json({ message: "Role updated successfully", board });
   } catch (error) {

@@ -24,7 +24,7 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   const [socket, setSocket] = useState(null);
   const [selectedBoardId, setSelectedBoardId] = useState("");
 
-  // Kết nối với WebSocket (Socket.IO)
+  // Kết nối với WebSocket
   useEffect(() => {
     const socketIo = io(SOCKET_URL);
     setSocket(socketIo);
