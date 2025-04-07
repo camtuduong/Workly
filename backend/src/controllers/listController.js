@@ -1,5 +1,6 @@
 const List = require("../models/List");
 const Board = require("../models/Board");
+const { hasBoardPermission } = require("../utils/permission");
 
 let io;
 const setIo = (socketIo) => {
@@ -11,14 +12,17 @@ const createList = async (req, res) => {
     const { boardId, title } = req.body;
     const userId = req.user.id;
 
-    const board = await Board.findOne({ _id: boardId, createdBy: userId });
+    const board = await Board.findById(boardId);
     if (!board) {
-      return res
-        .status(404)
-        .json({ message: "Board not found or you don't have access" });
+      return res.status(404).json({ message: "Board not found" });
     }
 
-    // Tính position: Lấy số lượng list hiện có trong board
+    if (!hasBoardPermission(board, userId, ["admin", "member"])) {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to add a list" });
+    }
+
     const listsInBoard = await List.find({ boardId });
     const position = listsInBoard.length;
 
@@ -55,21 +59,22 @@ const deleteList = async (req, res) => {
       return res.status(404).json({ message: "List not found" });
     }
 
-    const board = await Board.findOne({ _id: list.boardId, createdBy: userId });
+    const board = await Board.findById(list.boardId);
     if (!board) {
-      return res
-        .status(404)
-        .json({ message: "Board not found or you don't have access" });
+      return res.status(404).json({ message: "Board not found" });
     }
 
-    // Xóa list khỏi board
+    if (!hasBoardPermission(board, userId, ["admin", "member"])) {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to add a list" });
+    }
+
     board.lists = board.lists.filter((listId) => listId.toString() !== id);
     await board.save();
 
-    // Xóa list
     await list.deleteOne();
 
-    // Cập nhật position của các list còn lại
     const remainingLists = await List.find({ boardId: list.boardId }).sort({
       position: 1,
     });
@@ -102,44 +107,52 @@ const updateListPosition = async (req, res) => {
     const { listId, newPosition } = req.body;
     const userId = req.user.id;
 
-    // Kiểm tra dữ liệu đầu vào
     if (!listId || newPosition === undefined) {
       return res
         .status(400)
         .json({ message: "Missing required fields: listId, newPosition" });
     }
 
-    // Tìm list
     const list = await List.findById(listId);
     if (!list) {
       return res.status(404).json({ message: "List not found" });
     }
 
-    // Tìm board chứa list
     const board = await Board.findOne({ _id: list.boardId, createdBy: userId });
     if (!board) {
       return res
         .status(404)
         .json({ message: "Board not found or you don't have access" });
     }
+    //không cấp cho member/viewer quyền thay đổi vị trí
+    // const board = await Board.findById(list.boardId);
+    // if (!board) {
+    //   return res.status(404).json({ message: "Board not found" });
+    // }
 
-    // Kiểm tra newPosition hợp lệ
+    // const member = board.members.find(
+    //   (m) => m.userId.toString() === userId.toString()
+    // );
+
+    // if (!member || (member.role !== "admin" && member.role !== "member")) {
+    //   return res
+    //     .status(403)
+    //     .json({ message: "You don't have permission to delete this list" });
+    // }
+
     if (newPosition < 0 || newPosition >= board.lists.length) {
       return res.status(400).json({ message: "Invalid newPosition" });
     }
 
-    // Cập nhật vị trí list trong board
     const listIndex = board.lists.findIndex((id) => id.toString() === listId);
     if (listIndex === -1) {
       return res.status(404).json({ message: "List not found in board" });
     }
 
-    // Di chuyển list đến vị trí mới
     board.lists.splice(listIndex, 1);
     board.lists.splice(newPosition, 0, listId);
     await board.save();
 
-    // Cập nhật position của tất cả list
     const listsInBoard = await List.find({ boardId: list.boardId });
     for (let i = 0; i < board.lists.length; i++) {
       const currentList = listsInBoard.find(
@@ -151,7 +164,6 @@ const updateListPosition = async (req, res) => {
       }
     }
 
-    // Cập nhật board và emit sự kiện
     const updatedBoard = await Board.findById(list.boardId).populate({
       path: "lists",
       populate: { path: "cards" },

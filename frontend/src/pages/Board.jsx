@@ -201,6 +201,8 @@ const Board = () => {
   const handleDeleteBoard = async () => {
     try {
       await deleteBoard(id);
+      alert("Board deleted successfully!");
+      navigate("/dashboard/boards");
     } catch (error) {
       console.error("Error deleting board:", error.message);
     }

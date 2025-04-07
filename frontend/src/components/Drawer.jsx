@@ -36,8 +36,12 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   const [socket, setSocket] = useState(null);
   const [selectedBoardId, setSelectedBoardId] = useState("");
 
-  const myBoards = boards.filter((board) => board.createdBy === user?._id);
-  const sharedBoards = boards.filter((board) => board.createdBy !== user?._id);
+  const myBoards = boards.filter(
+    (board) => String(board.createdBy) === String(user?._id),
+  );
+  const sharedBoards = boards.filter(
+    (board) => String(board.createdBy) !== String(user?._id),
+  );
 
   useEffect(() => {
     const socketIo = io(SOCKET_URL);
@@ -55,6 +59,22 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
 
     socketIo.on("boardDeleted", (boardId) => {
       setBoards((prev) => prev.filter((b) => b._id !== boardId));
+    });
+
+    socketIo.on("memberRoleUpdated", ({ boardId, updatedMember }) => {
+      setBoards((prevBoards) =>
+        prevBoards.map((board) => {
+          if (board._id === boardId) {
+            if (String(updatedMember.userId) === String(user._id)) {
+              return {
+                ...board,
+                role: updatedMember.role,
+              };
+            }
+          }
+          return board;
+        }),
+      );
     });
 
     return () => {
@@ -195,14 +215,14 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                   </div>
                 ) : (
                   <>
-                    {/* My Boards */}
+                    {/* MY BOARDS */}
                     {myBoards.length > 0 && (
                       <>
                         <div className="mt-3 mb-1 px-4 text-xs font-semibold text-gray-400 uppercase">
-                          My Boards
+                          MY BOARDS
                         </div>
                         {myBoards.map((board, index) => {
-                          const myRole = board.role || "admin"; // ← lấy trực tiếp từ API
+                          const myRole = board.role || "admin";
                           return (
                             <button
                               key={board._id}
@@ -230,33 +250,40 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                       </>
                     )}
 
-                    {/* Shared Boards */}
-                    {sharedBoards.map((board, index) => {
-                      const myRole = board.role || "member";
-                      return (
-                        <button
-                          key={board._id}
-                          onClick={() => {
-                            handleSelectBoard(board._id);
-                            navigate(`/dashboard/board/${board._id}`);
-                          }}
-                          className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
-                            location.pathname ===
-                            `/dashboard/board/${board._id}`
-                              ? "bg-gray-700 text-white"
-                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                          }`}
-                        >
-                          <div
-                            className={`mr-3 h-5 w-5 rounded ${getBoardColor(index + 100)}`}
-                          />
-                          <div className="flex flex-1 justify-between truncate">
-                            <span>{board.title}</span>
-                            <RoleBadge role={myRole} />
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {/* SHARED BOARDS */}
+                    {sharedBoards.length > 0 && (
+                      <>
+                        <div className="mt-4 mb-1 px-4 text-xs font-semibold text-gray-400 uppercase">
+                          SHARED WITH ME
+                        </div>
+                        {sharedBoards.map((board, index) => {
+                          const myRole = board.role || "member";
+                          return (
+                            <button
+                              key={board._id}
+                              onClick={() => {
+                                handleSelectBoard(board._id);
+                                navigate(`/dashboard/board/${board._id}`);
+                              }}
+                              className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+                                location.pathname ===
+                                `/dashboard/board/${board._id}`
+                                  ? "bg-gray-700 text-white"
+                                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                              }`}
+                            >
+                              <div
+                                className={`mr-3 h-5 w-5 rounded ${getBoardColor(index + 100)}`}
+                              />
+                              <div className="flex flex-1 justify-between truncate">
+                                <span>{board.title}</span>
+                                <RoleBadge role={myRole} />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </>
+                    )}
                   </>
                 )}
               </div>
