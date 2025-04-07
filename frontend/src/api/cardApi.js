@@ -14,11 +14,8 @@ export const getCard = async (cardId) => {
   return response.data;
 };
 
-export const updateCard = async (cardId, title, description) => {
-  const response = await apiClient.put(`/cards/${cardId}`, {
-    title,
-    description,
-  });
+export const updateCard = async (cardId, updatedCard) => {
+  const response = await apiClient.put(`/cards/${cardId}`, updatedCard);
   return response.data;
 };
 

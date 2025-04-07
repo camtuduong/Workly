@@ -84,7 +84,7 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
           {list.cards.map((card) => (
             <Card
               key={card._id}
-              card={card}
+              card={{ ...card, boardId: list.boardId }}
               onEditCard={onEditCard}
               onDeleteCard={onDeleteCard}
             />
