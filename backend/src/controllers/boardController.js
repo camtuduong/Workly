@@ -16,21 +16,21 @@ const createBoard = async (req, res) => {
       return res.status(400).json({ message: "Vui lòng nhập Title" });
     }
 
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ message: "Không tìm thấy User ID trong token" });
-    }
-
     const board = new Board({
       title,
       createdBy: userId,
-      members: [{ userId: userId, role: "admin" }],
+      members: [{ userId, role: "admin" }],
     });
 
     await board.save();
 
-    io.emit("boardCreated", board);
+    // Gửi socket kèm role để client biết bạn là admin
+    io.emit("boardCreated", {
+      _id: board._id,
+      title: board.title,
+      createdBy: board.createdBy,
+      role: "admin",
+    });
 
     res.status(201).json(board);
   } catch (error) {
@@ -43,18 +43,22 @@ const getAllBoards = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const boards = await Board.find({ "members.userId": userId })
+    const boards = await Board.find({
+      $or: [{ "members.userId": userId }, { createdBy: userId }],
+    })
       .select("title members createdBy")
       .sort({ createdAt: -1 });
 
     const boardsWithRole = boards.map((board) => {
       const member = board.members.find((m) => m.userId.toString() === userId);
+      const role =
+        member?.role || (board.createdBy.toString() === userId ? "admin" : "");
 
       return {
         _id: board._id,
         title: board.title,
         createdBy: board.createdBy,
-        role: member?.role || "",
+        role,
       };
     });
 
