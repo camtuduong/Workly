@@ -36,12 +36,8 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   const [socket, setSocket] = useState(null);
   const [selectedBoardId, setSelectedBoardId] = useState("");
 
-  const myBoards = boards.filter(
-    (board) => String(board.createdBy) === String(user?._id),
-  );
-  const sharedBoards = boards.filter(
-    (board) => String(board.createdBy) !== String(user?._id),
-  );
+  const myBoards = boards.filter((board) => board.role === "admin");
+  const sharedBoards = boards.filter((board) => board.role !== "admin");
 
   useEffect(() => {
     const socketIo = io(SOCKET_URL);

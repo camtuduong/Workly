@@ -22,30 +22,34 @@ const Card = ({ card, onEditCard, onDeleteCard }) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="card group flex items-center justify-between rounded bg-gray-700 p-2 shadow"
+      className="card group mb-2 flex items-center justify-between rounded-md border border-gray-700 bg-gray-800 p-3 shadow-md transition-all duration-200 hover:shadow-lg"
     >
       <div
         {...listeners}
         className="flex basis-[90%] cursor-grab items-center space-x-2 select-none"
       >
-        <span className="text-sm text-white">{card.title}</span>
+        <span className="text-sm font-medium text-gray-200">{card.title}</span>
       </div>
-      <div className="basis-[10%] cursor-pointer space-x-2">
-        <svg
+      <div className="flex basis-[10%] cursor-pointer justify-end">
+        <button
           onClick={() => setIsModalOpen(true)}
-          className="hidden h-4 w-4 text-gray-400 transition-opacity duration-300 group-hover:block"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+          className="rounded-full p-1 text-gray-400 transition-colors duration-200 hover:bg-gray-700 hover:text-white"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
       </div>
       {isModalOpen && (
         <CardDetailModal
