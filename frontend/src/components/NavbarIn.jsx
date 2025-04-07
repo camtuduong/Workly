@@ -10,14 +10,12 @@ export default function NavbarIn() {
 
   return (
     <div>
-      {/* Top Navigation Bar */}
       <header
         className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center justify-between px-4 shadow-sm ${
           theme === "dark" ? "bg-[#2a1c4a]" : "bg-white"
         }`}
       >
         <div className="flex items-center">
-          {/* App icon */}
           <button className="hover:bg-opacity-80 rounded-md p-2">
             <svg
               className="h-5 w-5"
@@ -44,10 +42,8 @@ export default function NavbarIn() {
         </div>
 
         <div className="flex items-center space-x-3">
-          {/* Theme Color */}
           <ThemeToggleButton />
 
-          {/* Search */}
           <div
             className={`relative hidden md:block ${
               theme === "dark" ? "bg-[#3a2c5a]" : "bg-gray-100"
@@ -77,7 +73,6 @@ export default function NavbarIn() {
             </svg>
           </div>
 
-          {/* User avatar */}
           <UserInfoDropDown />
         </div>
       </header>

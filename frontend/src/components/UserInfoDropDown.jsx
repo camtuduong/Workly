@@ -19,23 +19,23 @@ export default function UserInfoDropDown() {
     if (user) {
       await updateUserLanguage(lang);
     }
-    setIsOpen(false); // Đóng dropdown sau khi chọn
+    setIsOpen(false);
   };
 
   const handleToggleTheme = () => {
     toggleTheme();
-    setIsOpen(false); // Đóng dropdown sau khi chọn
+    setIsOpen(false);
   };
 
   const handleLogout = () => {
     logout();
-    setIsOpen(false); // Đóng dropdown sau khi logout
-    navigate("/"); // Chuyển hướng về trang chủ sau khi logout
+    setIsOpen(false);
+    navigate("/");
   };
 
   const handleNavigate = (path) => {
     navigate(path);
-    setIsOpen(false); // Đóng dropdown sau khi điều hướng
+    setIsOpen(false);
   };
 
   if (loading) {
@@ -90,7 +90,6 @@ export default function UserInfoDropDown() {
               theme === "dark" ? "bg-[#2A1F42]" : "bg-white"
             } ${isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
           >
-            {/* User Info (nếu đã đăng nhập) */}
             {user && (
               <div
                 className={`border-b px-4 py-3 ${
@@ -109,12 +108,11 @@ export default function UserInfoDropDown() {
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {user.email} {/* Hiển thị email */}
+                  {user.email}
                 </p>
               </div>
             )}
 
-            {/* Menu Items */}
             <div className="py-1">
               {user ? (
                 <>

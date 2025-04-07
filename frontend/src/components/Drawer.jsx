@@ -48,7 +48,14 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
     setSocket(socketIo);
 
     socketIo.on("boardCreated", (newBoard) => {
-      setBoards((prev) => [...prev, newBoard]);
+      const isCreator = String(newBoard.createdBy) === String(user._id);
+      setBoards((prev) => [
+        ...prev,
+        {
+          ...newBoard,
+          role: isCreator ? "admin" : "member",
+        },
+      ]);
     });
 
     socketIo.on("boardUpdated", (updatedBoard) => {
@@ -222,7 +229,12 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                           MY BOARDS
                         </div>
                         {myBoards.map((board, index) => {
-                          const myRole = board.role || "admin";
+                          const myRole =
+                            board.role ||
+                            (String(board.createdBy) === String(user?._id)
+                              ? "admin"
+                              : "member");
+
                           return (
                             <button
                               key={board._id}
@@ -257,7 +269,12 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                           SHARED WITH ME
                         </div>
                         {sharedBoards.map((board, index) => {
-                          const myRole = board.role || "member";
+                          const myRole =
+                            board.role ||
+                            (String(board.createdBy) === String(user?._id)
+                              ? "admin"
+                              : "member");
+
                           return (
                             <button
                               key={board._id}

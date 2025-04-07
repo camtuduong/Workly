@@ -33,3 +33,16 @@ export const updateCardPosition = async (data) => {
   });
   return response.data;
 };
+
+export const uploadCardFile = async (cardId, formData) => {
+  const response = await apiClient.post(
+    `/cards/${cardId}/attachments`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
