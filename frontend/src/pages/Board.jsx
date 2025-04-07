@@ -33,6 +33,7 @@ const Board = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [socket, setSocket] = useState(null);
+  const [showUserPanel, setShowUserPanel] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -181,16 +182,6 @@ const Board = () => {
       console.error("Error deleting card:", error.message);
     }
   };
-  const handleSaveCard = async () => {
-    if (!title.trim() || !description.trim()) {
-      alert("Title và Description không được để trống.");
-      return;
-    }
-
-    const updatedCard = { ...card, title, description, assignedTo };
-    onEditCard(updatedCard);
-    onClose();
-  };
 
   const handleDeleteList = async (listId) => {
     try {
@@ -210,9 +201,10 @@ const Board = () => {
   };
 
   const handleDeleteBoard = async () => {
+    if (!window.confirm(t("confirmDeleteBoard"))) return;
+
     try {
       await deleteBoard(id);
-      alert("Board deleted successfully!");
       socket.emit("boardDeleted", id);
       navigate("/dashboard/boards");
     } catch (error) {
@@ -368,125 +360,239 @@ const Board = () => {
 
   if (loading) {
     return (
-      <div className="spinner flex h-screen items-center justify-center text-white">
-        {t("loading")}
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="flex flex-col items-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-4 text-lg text-white">{t("loading")}</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center text-white">
-        {error}
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="rounded-lg bg-red-500/10 p-8 text-center shadow-lg">
+          <svg
+            className="mx-auto h-16 w-16 text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <h2 className="mt-4 text-xl font-bold text-white">{error}</h2>
+          <button
+            onClick={() => navigate("/dashboard/boards")}
+            className="mt-6 rounded-lg bg-blue-600 px-4 py-2 text-white transition-all hover:bg-blue-700"
+          >
+            {t("backToBoards")}
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="flex h-screen items-center justify-center text-white">
-        {t("boardNotFound")}
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="rounded-lg bg-gray-800 p-8 text-center shadow-lg">
+          <svg
+            className="mx-auto h-16 w-16 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h2 className="mt-4 text-xl font-bold text-white">
+            {t("boardNotFound")}
+          </h2>
+          <button
+            onClick={() => navigate("/dashboard/boards")}
+            className="mt-6 rounded-lg bg-blue-600 px-4 py-2 text-white transition-all hover:bg-blue-700"
+          >
+            {t("backToBoards")}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className="flex h-screen overflow-y-hidden"
+      className="flex h-screen flex-col overflow-hidden bg-cover bg-center"
       style={{
-        backgroundImage: `url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')`,
       }}
     >
-      <div className="flex flex-1 flex-col">
-        {/* header */}
-        <div className="h-[120px] flex-none p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-white">{board.title}</h1>
-            <button
-              onClick={handleDeleteBoard}
-              className="rounded bg-red-500 px-4 py-1 text-white"
+      {/* Header */}
+      <div className="flex items-center justify-between bg-black/30 px-6 py-4 backdrop-blur-sm">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate("/dashboard/boards")}
+            className="rounded-full bg-white/10 p-2 text-white transition-all hover:bg-white/20"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
             >
-              {t("deleteBoard")}
-            </button>
-          </div>
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-white">
-              {t("onlineUsers")}
-            </h2>
-            <ul>
-              {onlineUsers.map((userId) => {
-                const user = users.find((u) => u._id === userId);
-                return (
-                  <li key={userId} className="text-white">
-                    {user ? user.username : userId} ({t("online")})
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+              <path
+                fillRule="evenodd"
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-bold text-white">{board.title}</h1>
         </div>
 
-        {/* Body + scroll */}
-        <div className="min-h-0 min-w-0 flex-1">
-          <div className="flex h-full min-w-max overflow-x-auto overflow-y-hidden px-3 pb-3">
-            <DndContext
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setShowUserPanel(!showUserPanel)}
+            className="flex items-center rounded-lg bg-white/10 px-3 py-1.5 text-white transition-all hover:bg-white/20"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="mr-2 h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
             >
-              <div className="flex min-w-max items-start gap-4">
-                <SortableContext
-                  items={board.lists.map((list) => `list-${list._id}`)}
-                  strategy={horizontalListSortingStrategy}
-                >
-                  {board.lists.map((list) => (
-                    <List
-                      key={list._id}
-                      list={list}
-                      onAddCard={handleAddCard}
-                      onEditCard={handleEditCard}
-                      onDeleteCard={handleDeleteCard}
-                      onDeleteList={handleDeleteList}
-                    />
-                  ))}
-                </SortableContext>
-                {isAddingList ? (
-                  <div className="w-64 rounded bg-gray-800 p-4">
-                    <input
-                      type="text"
-                      value={newListTitle}
-                      onChange={(e) => setNewListTitle(e.target.value)}
-                      className="mb-2 w-full rounded border bg-gray-700 p-2 text-white placeholder-gray-400"
-                      placeholder={t("enterListTitle")}
-                    />
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={handleAddList}
-                        className="rounded bg-blue-500 px-4 py-1 text-white"
-                      >
-                        {t("addList")}
-                      </button>
-                      <button
-                        onClick={() => setIsAddingList(false)}
-                        className="text-gray-400 hover:text-gray-200"
-                      >
-                        {t("cancel")}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+            </svg>
+            {onlineUsers.length} {t("online")}
+          </button>
+
+          <button
+            onClick={handleDeleteBoard}
+            className="flex items-center rounded-lg bg-red-500/80 px-3 py-1.5 text-white transition-all hover:bg-red-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="mr-2 h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {t("deleteBoard")}
+          </button>
+        </div>
+      </div>
+
+      {/* Online Users Panel */}
+      {showUserPanel && (
+        <div className="absolute top-16 right-6 z-10 w-64 rounded-lg bg-gray-800 p-4 shadow-lg">
+          <h3 className="mb-2 border-b border-gray-700 pb-2 text-lg font-medium text-white">
+            {t("onlineUsers")}
+          </h3>
+          <ul className="max-h-60 overflow-y-auto">
+            {onlineUsers.length > 0 ? (
+              onlineUsers.map((userId) => {
+                const user = users.find((u) => u._id === userId);
+                return (
+                  <li
+                    key={userId}
+                    className="mb-2 flex items-center text-white"
+                  >
+                    <span className="mr-2 h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                    {user ? user.username : userId}
+                  </li>
+                );
+              })
+            ) : (
+              <li className="text-gray-400">{t("noOnlineUsers")}</li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {/* Board Content */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 pt-2 pb-4">
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex min-w-max items-start gap-4">
+            <SortableContext
+              items={board.lists.map((list) => `list-${list._id}`)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {board.lists.map((list) => (
+                <List
+                  key={list._id}
+                  list={list}
+                  onAddCard={handleAddCard}
+                  onEditCard={handleEditCard}
+                  onDeleteCard={handleDeleteCard}
+                  onDeleteList={handleDeleteList}
+                />
+              ))}
+            </SortableContext>
+
+            {isAddingList ? (
+              <div className="flex h-auto w-72 flex-col rounded-lg bg-gray-800/90 p-3 shadow-lg backdrop-blur-sm">
+                <input
+                  type="text"
+                  value={newListTitle}
+                  onChange={(e) => setNewListTitle(e.target.value)}
+                  className="mb-3 w-full rounded-md border border-gray-600 bg-gray-700/90 p-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  placeholder={t("enterListTitle")}
+                  autoFocus
+                />
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => setIsAddingList(true)}
-                    className="w-64 rounded bg-gray-800 p-4 text-gray-400 hover:bg-gray-700"
+                    onClick={handleAddList}
+                    className="flex-1 rounded-md bg-blue-600 py-2 font-medium text-white transition-colors hover:bg-blue-700"
                   >
                     {t("addList")}
                   </button>
-                )}
+                  <button
+                    onClick={() => setIsAddingList(false)}
+                    className="rounded-md bg-gray-700 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-600"
+                  >
+                    {t("cancel")}
+                  </button>
+                </div>
               </div>
-            </DndContext>
+            ) : (
+              <button
+                onClick={() => setIsAddingList(true)}
+                className="flex h-16 w-72 items-center justify-center rounded-lg bg-white/10 text-white transition-all hover:bg-white/20"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2 h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {t("addList")}
+              </button>
+            )}
           </div>
-        </div>
+        </DndContext>
       </div>
     </div>
   );
