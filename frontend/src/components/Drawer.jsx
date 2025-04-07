@@ -129,7 +129,7 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
   return (
     <div className="fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)]">
       <div
-        className={`h-full bg-gray-900 text-white transition-all duration-300 ${
+        className={`h-full text-gray-900 transition-all duration-300 dark:bg-gray-900 dark:text-white ${
           isOpen ? "w-72" : "w-0"
         } overflow-hidden shadow-xl`}
       >
@@ -156,15 +156,15 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 space-y-6 overflow-y-auto p-3">
+          <div className="flex-1 space-y-6 overflow-y-auto p-3 text-gray-900">
             {/* Main nav */}
             <div className="space-y-1">
               <button
                 onClick={() => navigate("/dashboard/boards")}
                 className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
                   isActive("/boards")
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                 }`}
               >
                 <FiGrid className="mr-3 h-5 w-5" />
@@ -175,24 +175,12 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                 onClick={handleShowMembers}
                 className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
                   isActive(`/dashboard/board/${selectedBoardId}/members`)
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                 }`}
               >
                 <FiUsers className="mr-3 h-5 w-5" />
                 <span>Members</span>
-              </button>
-
-              <button
-                onClick={() => navigate("/settings")}
-                className={`flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm font-medium ${
-                  isActive("/settings")
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                }`}
-              >
-                <FiSettings className="mr-3 h-5 w-5" />
-                <span>Workspace settings</span>
               </button>
             </div>
 
@@ -241,8 +229,8 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                               className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
                                 location.pathname ===
                                 `/dashboard/board/${board._id}`
-                                  ? "bg-gray-700 text-white"
-                                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                                  ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white"
+                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                               }`}
                             >
                               <div
@@ -281,8 +269,8 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
                               className={`group flex w-full items-center rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
                                 location.pathname ===
                                 `/dashboard/board/${board._id}`
-                                  ? "bg-gray-700 text-white"
-                                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                                  ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white"
+                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                               }`}
                             >
                               <div
@@ -308,7 +296,7 @@ const Drawer = ({ isOpen, toggleDrawer }) => {
       {!isOpen && (
         <button
           onClick={toggleDrawer}
-          className="relative top-0 left-0 flex h-full w-6 items-center justify-center bg-gray-900 text-gray-500 hover:text-white"
+          className="relative top-0 left-0 flex h-full w-6 items-center justify-center bg-white hover:text-white dark:bg-gray-900 dark:text-gray-500"
         >
           <div className="flex flex-col items-center justify-center space-y-1">
             <div className="h-1 w-1 rounded-full bg-gray-500"></div>

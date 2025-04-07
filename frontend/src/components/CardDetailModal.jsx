@@ -66,7 +66,7 @@ const CardDetailModal = ({ card, onClose, onEditCard }) => {
       onClose();
     } catch (error) {
       console.error("Error saving card:", error.message);
-      alert("Có lỗi xảy ra, vui lòng thử lại.");
+      alert("Bạn không có quyền sửa.");
     } finally {
       setLoading(false);
     }

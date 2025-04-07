@@ -10,11 +10,15 @@ import {
 import { SOCKET_URL } from "../api/config";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import useThemeStore from "../store/useThemeStore";
 
 const Boards = () => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { theme } = useThemeStore(); // Lấy theme từ useThemeStore
+  const isDark = theme === "dark"; // Xác định chế độ hiện tại
+
   const [boards, setBoards] = useState([]);
   const [socket, setSocket] = useState(null);
   const [newBoardTitle, setNewBoardTitle] = useState("");
@@ -126,48 +130,88 @@ const Boards = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E1331] to-[#2D1B4A] p-6 text-white">
+    <div
+      className={`min-h-screen p-6 transition-colors duration-300 ${
+        isDark
+          ? "bg-gradient-to-br from-[#1E1331] to-[#2D1B4A] text-white"
+          : "bg-gradient-to-r from-white to-purple-50 text-gray-800"
+      }`}
+    >
       <div className="container mx-auto max-w-6xl">
         {/* Header Section */}
-        <div className="mb-8 flex items-center justify-between rounded-lg bg-[#2A1F42]/60 p-4 backdrop-blur-sm">
+        <div
+          className={`mb-8 flex items-center justify-between rounded-lg p-4 shadow-lg backdrop-blur-sm transition-colors duration-300 ${
+            isDark ? "bg-[#2A1F42]/60" : "bg-white/80"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-xl font-bold">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-xl font-bold ${
+                isDark ? "bg-purple-600 text-white" : "bg-purple-600 text-white"
+              }`}
+            >
               B
             </div>
-            <h1 className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
+            <h1
+              className={`text-3xl font-bold ${
+                isDark
+                  ? "bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                  : "text-purple-700"
+              }`}
+            >
               {t("boards")}
             </h1>
           </div>
           <button
             onClick={handleLogout}
-            className="rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-4 py-2 text-white shadow-lg transition-all hover:shadow-red-500/25 active:scale-95"
+            className={`rounded-lg px-4 py-2 text-white shadow-lg transition-all hover:shadow-red-500/25 active:scale-95 ${
+              isDark
+                ? "bg-gradient-to-r from-red-500 to-red-600"
+                : "bg-gradient-to-r from-red-400 to-red-500"
+            }`}
           >
             {t("logout")}
           </button>
         </div>
 
         {/* Add Board Section */}
-        <div className="mb-8 rounded-lg bg-[#2A1F42]/60 p-6 shadow-xl backdrop-blur-sm">
+        <div
+          className={`mb-8 rounded-lg p-6 shadow-xl backdrop-blur-sm transition-colors duration-300 ${
+            isDark ? "bg-[#2A1F42]/60" : "bg-white/80"
+          }`}
+        >
           {isAddingBoard ? (
             <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={newBoardTitle}
                 onChange={(e) => setNewBoardTitle(e.target.value)}
-                className="flex-1 rounded-lg border border-purple-500/30 bg-[#3A2F52] p-3 text-white placeholder-purple-300/50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
+                className={`flex-1 rounded-lg border p-3 transition-colors duration-300 focus:ring-2 focus:outline-none ${
+                  isDark
+                    ? "border-purple-500/30 bg-[#3A2F52] text-white placeholder-purple-300/50 focus:border-purple-500 focus:ring-purple-500/30"
+                    : "border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400/30"
+                }`}
                 placeholder={t("enterBoardTitle")}
                 autoFocus
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleCreateBoard}
-                  className="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-white shadow-lg transition-all hover:shadow-purple-500/25 active:scale-95"
+                  className={`rounded-lg px-6 py-3 text-white shadow-lg transition-all hover:shadow-purple-500/25 active:scale-95 ${
+                    isDark
+                      ? "bg-gradient-to-r from-blue-500 to-purple-600"
+                      : "bg-gradient-to-r from-blue-400 to-purple-500"
+                  }`}
                 >
                   {t("createBoard")}
                 </button>
                 <button
                   onClick={() => setIsAddingBoard(false)}
-                  className="rounded-lg border border-gray-600 px-6 py-3 text-gray-300 transition-all hover:bg-gray-700/30 active:scale-95"
+                  className={`hover:bg-opacity-30 rounded-lg border px-6 py-3 transition-all active:scale-95 ${
+                    isDark
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700/30"
+                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
                 >
                   {t("cancel")}
                 </button>
@@ -176,7 +220,11 @@ const Boards = () => {
           ) : (
             <button
               onClick={() => setIsAddingBoard(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-purple-400/30 bg-[#2A1F42]/60 py-4 text-purple-300 transition-all hover:border-purple-400/60 hover:text-purple-200"
+              className={`flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed py-4 transition-all ${
+                isDark
+                  ? "border-purple-400/30 bg-[#2A1F42]/60 text-purple-300 hover:border-purple-400/60 hover:text-purple-200"
+                  : "border-purple-300/50 bg-white/50 text-purple-600 hover:border-purple-400/70 hover:text-purple-700"
+              }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -201,8 +249,16 @@ const Boards = () => {
         {/* Boards Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {boards.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center rounded-lg bg-[#2A1F42]/60 p-8 text-center">
-              <div className="mb-4 rounded-full bg-purple-500/20 p-4">
+            <div
+              className={`col-span-full flex flex-col items-center justify-center rounded-lg p-8 text-center transition-colors duration-300 ${
+                isDark ? "bg-[#2A1F42]/60" : "bg-white/80"
+              }`}
+            >
+              <div
+                className={`mb-4 rounded-full p-4 ${
+                  isDark ? "bg-purple-500/20" : "bg-purple-100"
+                }`}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="48"
@@ -213,16 +269,24 @@ const Boards = () => {
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-purple-300"
+                  className={isDark ? "text-purple-300" : "text-purple-600"}
                 >
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="9" y1="3" x2="9" y2="21"></line>
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-purple-300">
+              <h3
+                className={`mb-2 text-xl font-semibold ${
+                  isDark ? "text-purple-300" : "text-purple-700"
+                }`}
+              >
                 Chưa có bảng nào
               </h3>
-              <p className="text-purple-300/70">Tạo bảng đầu tiên để bắt đầu</p>
+              <p
+                className={isDark ? "text-purple-300/70" : "text-purple-600/70"}
+              >
+                Tạo bảng đầu tiên để bắt đầu
+              </p>
             </div>
           ) : (
             boards.map((board) => (
@@ -230,11 +294,23 @@ const Boards = () => {
                 key={board._id}
                 onMouseEnter={() => setIsHovering(board._id)}
                 onMouseLeave={() => setIsHovering(null)}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#2A1F42] to-[#3A2F52] p-5 shadow-lg transition-all duration-300 hover:translate-y-[-4px] hover:shadow-purple-500/10"
+                className={`group relative overflow-hidden rounded-xl p-5 shadow-lg transition-all duration-300 hover:translate-y-[-4px] hover:shadow-purple-500/10 ${
+                  isDark
+                    ? "bg-gradient-to-br from-[#2A1F42] to-[#3A2F52]"
+                    : "bg-gradient-to-br from-white to-purple-100"
+                }`}
               >
                 {/* Decoration circles */}
-                <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-purple-600/10"></div>
-                <div className="absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-purple-600/5"></div>
+                <div
+                  className={`absolute -top-8 -right-8 h-24 w-24 rounded-full ${
+                    isDark ? "bg-purple-600/10" : "bg-purple-300/20"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -bottom-10 -left-10 h-24 w-24 rounded-full ${
+                    isDark ? "bg-purple-600/5" : "bg-purple-200/10"
+                  }`}
+                ></div>
 
                 {editingBoardId === board._id ? (
                   <div className="relative z-10 flex flex-col space-y-4">
@@ -242,20 +318,32 @@ const Boards = () => {
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="rounded-lg border border-purple-500/30 bg-[#3A2F52] p-3 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
+                      className={`rounded-lg border p-3 transition-colors duration-300 focus:ring-2 focus:outline-none ${
+                        isDark
+                          ? "border-purple-500/30 bg-[#3A2F52] text-white focus:border-purple-500 focus:ring-purple-500/30"
+                          : "border-gray-300 bg-white text-gray-800 focus:border-purple-400 focus:ring-purple-400/30"
+                      }`}
                       placeholder={t("enterNewTitle")}
                       autoFocus
                     />
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleUpdateBoard(board._id)}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-white shadow-lg transition-all hover:shadow-blue-500/25 active:scale-95"
+                        className={`flex-1 rounded-lg px-4 py-2 text-white shadow-lg transition-all hover:shadow-blue-500/25 active:scale-95 ${
+                          isDark
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                            : "bg-gradient-to-r from-blue-400 to-blue-500"
+                        }`}
                       >
                         {t("save")}
                       </button>
                       <button
                         onClick={() => setEditingBoardId(null)}
-                        className="rounded-lg border border-gray-600 px-4 py-2 text-gray-300 transition-all hover:bg-gray-700/30 active:scale-95"
+                        className={`hover:bg-opacity-30 rounded-lg border px-4 py-2 transition-all active:scale-95 ${
+                          isDark
+                            ? "border-gray-600 text-gray-300 hover:bg-gray-700/30"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                        }`}
                       >
                         {t("cancel")}
                       </button>
@@ -264,17 +352,29 @@ const Boards = () => {
                 ) : (
                   <div className="relative z-10 flex flex-col space-y-4">
                     <Link to={`../board/${board._id}`} className="mb-4 block">
-                      <h2 className="text-xl font-bold text-white transition-colors group-hover:text-purple-300">
+                      <h2
+                        className={`text-xl font-bold transition-colors group-hover:text-purple-300 ${
+                          isDark ? "text-white" : "text-gray-800"
+                        }`}
+                      >
                         {board.title}
                       </h2>
-                      <p className="mt-2 text-sm text-gray-400">
+                      <p
+                        className={`mt-2 text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Nhấn để xem chi tiết bảng này
                       </p>
                     </Link>
                     <div className="flex justify-between gap-2">
                       <button
                         onClick={() => handleEditBoard(board)}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-sm text-white shadow-lg transition-all hover:shadow-amber-500/25 active:scale-95"
+                        className={`flex-1 rounded-lg px-3 py-1.5 text-sm text-white shadow-lg transition-all hover:shadow-amber-500/25 active:scale-95 ${
+                          isDark
+                            ? "bg-gradient-to-r from-amber-500 to-amber-600"
+                            : "bg-gradient-to-r from-amber-400 to-amber-500"
+                        }`}
                       >
                         <div className="flex items-center justify-center">
                           <svg
@@ -297,7 +397,11 @@ const Boards = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteBoard(board._id)}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-1.5 text-sm text-white shadow-lg transition-all hover:shadow-red-500/25 active:scale-95"
+                        className={`flex-1 rounded-lg px-3 py-1.5 text-sm text-white shadow-lg transition-all hover:shadow-red-500/25 active:scale-95 ${
+                          isDark
+                            ? "bg-gradient-to-r from-red-500 to-red-600"
+                            : "bg-gradient-to-r from-red-400 to-red-500"
+                        }`}
                       >
                         <div className="flex items-center justify-center">
                           <svg
