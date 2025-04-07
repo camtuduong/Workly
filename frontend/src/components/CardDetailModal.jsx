@@ -3,8 +3,9 @@ import { updateCard } from "../api/cardApi";
 import { getBoardMembers } from "../api/boardApi";
 
 const CardDetailModal = ({ card, onClose, onEditCard }) => {
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description);
+  const [title, setTitle] = useState(card.title || "");
+  const [description, setDescription] = useState(card.description || "");
+
   const [assignedTo, setAssignedTo] = useState(card.assignedTo || "");
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
