@@ -38,7 +38,7 @@ const getCard = async (req, res) => {
 
 const createCard = async (req, res) => {
   try {
-    const { listId, title } = req.body;
+    const { listId, title, assignedTo } = req.body;
     const userId = req.user.id;
 
     const list = await List.findById(listId);
@@ -64,6 +64,7 @@ const createCard = async (req, res) => {
       title,
       listId,
       createdBy: userId,
+      assignedTo,
       position,
     });
     await card.save();
@@ -211,6 +212,11 @@ const updateCardPosition = async (req, res) => {
         .json({ message: "Board not found or you don't have access" });
     }
 
+    //     const board = await Board.findById(oldList.boardId);
+    // if (!hasBoardPermission(board, userId, ["admin", "member"])) {
+    //   return res.status(403).json({ message: "You don't have permission to move cards" });
+    // }
+
     const oldListId = card.listId.toString();
 
     if (newListId && !mongoose.Types.ObjectId.isValid(newListId)) {
@@ -341,10 +347,14 @@ const assignCard = async (req, res) => {
 
     const updatedBoard = await Board.findById(board._id).populate({
       path: "lists",
-      populate: { path: "cards" },
+      populate: {
+        path: "cards",
+        populate: { path: "assignedTo", select: "username email" },
+      },
     });
 
     io.to(board._id.toString()).emit("boardUpdated", updatedBoard);
+
     res.json({ message: "Card assigned successfully", card });
   } catch (err) {
     console.error("Error assigning card:", err.message);
