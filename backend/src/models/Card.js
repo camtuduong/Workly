@@ -22,6 +22,10 @@ const cardSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 });
 
 module.exports = mongoose.model("Card", cardSchema);

@@ -111,10 +111,13 @@ const updateCard = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    if (!hasBoardPermission(board, userId, ["admin", "member"])) {
+    if (
+      card.assignedTo.toString() !== userId &&
+      !hasBoardPermission(board, userId, ["admin"])
+    ) {
       return res
         .status(403)
-        .json({ message: "You don't have permission to add a list" });
+        .json({ message: "No permission to update this card" });
     }
 
     card.title = title;
@@ -310,6 +313,45 @@ const updateCardPosition = async (req, res) => {
   }
 };
 
+const assignCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+    const userId = req.user.id;
+
+    const card = await Card.findById(id);
+    if (!card) return res.status(404).json({ message: "Card not found" });
+
+    const list = await List.findById(card.listId);
+    const board = await Board.findById(list.boardId);
+
+    if (!board) return res.status(404).json({ message: "Board not found" });
+
+    const member = board.members.find(
+      (m) => m.userId.toString() === userId.toString()
+    );
+    if (!member || (member.role !== "admin" && member.role !== "member")) {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to assign this card" });
+    }
+
+    card.assignedTo = assignedTo;
+    await card.save();
+
+    const updatedBoard = await Board.findById(board._id).populate({
+      path: "lists",
+      populate: { path: "cards" },
+    });
+
+    io.to(board._id.toString()).emit("boardUpdated", updatedBoard);
+    res.json({ message: "Card assigned successfully", card });
+  } catch (err) {
+    console.error("Error assigning card:", err.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 module.exports = {
   setIo,
   getCard,
@@ -317,4 +359,5 @@ module.exports = {
   updateCard,
   deleteCard,
   updateCardPosition,
+  assignCard,
 };
