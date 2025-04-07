@@ -55,21 +55,31 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
     setIsAddingCard(false);
   };
 
+  const cardCount = list.cards.length;
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="flex max-h-[calc(100vh-200px)] w-72 min-w-[18rem] flex-col rounded bg-white text-gray-800 shadow"
+      className="flex max-h-[calc(100vh-200px)] w-72 min-w-[18rem] flex-col rounded-lg border border-gray-200 bg-gray-50 text-gray-800 shadow-md"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2">
-        <h3 {...listeners} className="cursor-grab text-base font-semibold">
+      <div className="flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-white px-4 py-3">
+        <h3
+          {...listeners}
+          className="cursor-grab text-base font-semibold text-gray-700 select-none"
+        >
           {list.title || "Untitled"}
+
+          <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600">
+            {cardCount}
+          </span>
         </h3>
+
         <button
           onClick={() => onDeleteList(list._id)}
-          className="text-gray-400 hover:text-gray-600"
+          className="flex h-6 w-6 items-center justify-center rounded-full text-lg font-medium text-gray-400 transition-colors duration-200 hover:bg-gray-100 hover:text-red-500"
+          aria-label="Delete list"
         >
           ×
         </button>
@@ -79,8 +89,13 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <div
           ref={setDroppableRef}
-          className="cards flex-1 space-y-2 overflow-x-hidden overflow-y-auto p-3"
+          className="cards flex-1 space-y-3 overflow-x-hidden overflow-y-auto bg-gray-50 p-3"
         >
+          {list.cards.length === 0 && (
+            <div className="py-4 text-center text-sm text-gray-400 italic">
+              No cards yet
+            </div>
+          )}
           {list.cards.map((card) => (
             <Card
               key={card._id}
@@ -93,35 +108,42 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
       </div>
 
       {/* Add Card */}
-      <div className="border-t px-3 py-2" ref={addCardRef}>
+      <div
+        className="rounded-b-lg border-t border-gray-200 bg-white px-3 py-3"
+        ref={addCardRef}
+      >
         {isAddingCard ? (
           <>
             <textarea
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
-              className="w-full resize-none rounded bg-gray-700 p-2 text-sm text-white"
+              className="w-full resize-none rounded border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               placeholder="Enter card title..."
               rows={2}
+              autoFocus
             />
-            <div className="mt-1 flex gap-2">
+            <div className="mt-2 flex gap-2">
               <button
                 onClick={handleAddCardSubmit}
-                className="rounded bg-green-500 px-3 py-1 text-sm text-white"
+                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white transition-colors duration-200 hover:bg-blue-600"
               >
                 Add
               </button>
               <button
-                onClick={() => setIsAddingCard(false)}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={() => {
+                  setIsAddingCard(false);
+                  setNewCardTitle("");
+                }}
+                className="rounded px-3 py-1.5 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-100"
               >
-                ✕
+                Cancel
               </button>
             </div>
           </>
         ) : (
           <button
             onClick={() => setIsAddingCard(true)}
-            className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600"
+            className="flex w-full items-center justify-center gap-1 rounded py-1.5 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-100"
           >
             <span className="text-lg">＋</span> Add Card
           </button>
