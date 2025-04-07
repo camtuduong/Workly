@@ -157,18 +157,18 @@ const Board = () => {
     }
   };
 
-  const handleAddCard = async (listId, title) => {
+  const handleAddCard = async (listId, title, description) => {
     try {
-      const response = await createCard(listId, title);
+      const response = await createCard(listId, title, description);
       console.log("Card created:", response);
     } catch (error) {
       console.error("Error creating card:", error.message);
     }
   };
 
-  const handleEditCard = async (cardId, title) => {
+  const handleEditCard = async (cardId, title, description) => {
     try {
-      await updateCard(cardId, title);
+      await updateCard(cardId, title, description);
     } catch (error) {
       console.error("Error updating card:", error.message);
     }
@@ -181,11 +181,22 @@ const Board = () => {
       console.error("Error deleting card:", error.message);
     }
   };
+  const handleSaveCard = async () => {
+    if (!title.trim() || !description.trim()) {
+      alert("Title và Description không được để trống.");
+      return;
+    }
+
+    const updatedCard = { ...card, title, description, assignedTo };
+    onEditCard(updatedCard);
+    onClose();
+  };
 
   const handleDeleteList = async (listId) => {
     try {
       const response = await deleteList(listId);
       console.log("List deleted successfully:", response);
+      socket.emit("listDeleted", listId);
     } catch (error) {
       console.error(
         "Error deleting list:",
@@ -202,6 +213,7 @@ const Board = () => {
     try {
       await deleteBoard(id);
       alert("Board deleted successfully!");
+      socket.emit("boardDeleted", id);
       navigate("/dashboard/boards");
     } catch (error) {
       console.error("Error deleting board:", error.message);
@@ -265,37 +277,31 @@ const Board = () => {
       return;
     }
 
-    // Tìm card đang được kéo
     const activeCard = board.lists[activeListIndex].cards.find(
       (card) => card._id === activeCardId,
     );
     if (!activeCard) {
       console.error("Active card not found:", activeCardId);
-      // Fetch lại board từ backend để đồng bộ dữ liệu
       const updatedBoard = await getBoard(id);
       setBoard(updatedBoard);
       return;
     }
 
     if (activeListId === overListId) {
-      // Kéo thả trong cùng một list
       const activeListCards = board.lists[activeListIndex].cards;
       const oldIndex = activeListCards.findIndex(
         (card) => card._id === activeCardId,
       );
 
-      // Kiểm tra xem over.id là card hay list
       let newIndex;
       const overCard = activeListCards.find(
         (card) => card._id === over.id.replace("card-", ""),
       );
       if (overCard) {
-        // Nếu over.id là một card
         newIndex = activeListCards.findIndex(
           (card) => card._id === over.id.replace("card-", ""),
         );
       } else {
-        // Nếu over.id là list (khi list trống), đặt card vào vị trí cuối
         newIndex = activeListCards.length - 1;
       }
 
@@ -318,31 +324,26 @@ const Board = () => {
         });
       } catch (error) {
         console.error("Error updating card position:", error.message);
-        // Fetch lại board từ backend để đồng bộ dữ liệu
         const updatedBoard = await getBoard(id);
         setBoard(updatedBoard);
       }
     } else {
-      // Kéo thả sang list khác
       const newLists = [...board.lists];
       newLists[activeListIndex].cards = newLists[activeListIndex].cards.filter(
         (card) => card._id !== activeCardId,
       );
 
-      // Thêm card vào list mới
       const overListCards = newLists[overListIndex].cards;
       const overCard = overListCards.find(
         (card) => card._id === over.id.replace("card-", ""),
       );
       let newPosition;
       if (overCard) {
-        // Nếu over.id là một card, thêm vào vị trí của overCard
         newPosition = overListCards.findIndex(
           (card) => card._id === over.id.replace("card-", ""),
         );
         newLists[overListIndex].cards.splice(newPosition, 0, activeCard);
       } else {
-        // Nếu over.id là list (list trống), thêm vào cuối
         newPosition = overListCards.length;
         newLists[overListIndex].cards.push(activeCard);
       }
@@ -367,7 +368,7 @@ const Board = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-white">
+      <div className="spinner flex h-screen items-center justify-center text-white">
         {t("loading")}
       </div>
     );

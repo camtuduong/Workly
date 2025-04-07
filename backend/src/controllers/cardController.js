@@ -38,7 +38,7 @@ const getCard = async (req, res) => {
 
 const createCard = async (req, res) => {
   try {
-    const { listId, title, assignedTo } = req.body;
+    const { listId, title, description, assignedTo } = req.body;
     const userId = req.user.id;
 
     const list = await List.findById(listId);
@@ -62,6 +62,7 @@ const createCard = async (req, res) => {
 
     const card = new Card({
       title,
+      description,
       listId,
       createdBy: userId,
       assignedTo,
@@ -94,7 +95,7 @@ const createCard = async (req, res) => {
 const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
+    const { title, description, assignedTo } = req.body;
     const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -113,6 +114,7 @@ const updateCard = async (req, res) => {
     }
 
     if (
+      card.assignedTo &&
       card.assignedTo.toString() !== userId &&
       !hasBoardPermission(board, userId, ["admin"])
     ) {
@@ -122,6 +124,8 @@ const updateCard = async (req, res) => {
     }
 
     card.title = title;
+    card.description = description || card.description;
+    card.assignedTo = assignedTo || card.assignedTo;
     await card.save();
 
     const updatedBoard = await Board.findById(list.boardId).populate({
@@ -333,13 +337,10 @@ const assignCard = async (req, res) => {
 
     if (!board) return res.status(404).json({ message: "Board not found" });
 
-    const member = board.members.find(
-      (m) => m.userId.toString() === userId.toString()
-    );
-    if (!member || (member.role !== "admin" && member.role !== "member")) {
-      return res
-        .status(403)
-        .json({ message: "You don't have permission to assign this card" });
+    if (!hasBoardPermission(board, userId, ["admin"])) {
+      return res.status(403).json({
+        message: "Only admins can assign users to cards",
+      });
     }
 
     card.assignedTo = assignedTo;

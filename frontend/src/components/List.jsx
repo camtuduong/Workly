@@ -30,22 +30,19 @@ const List = ({ list, onAddCard, onEditCard, onDeleteCard, onDeleteList }) => {
 
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isAddingCard, setIsAddingCard] = useState(false);
-  const addCardRef = useRef(null); // Ref để tham chiếu đến vùng add card
+  const addCardRef = useRef(null);
 
-  // Hàm xử lý khi click ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (addCardRef.current && !addCardRef.current.contains(event.target)) {
-        setIsAddingCard(false); // Ẩn textarea khi click ngoài
+        setIsAddingCard(false);
       }
     };
 
-    // Gắn sự kiện click vào document khi textarea hiển thị
     if (isAddingCard) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    // Dọn dẹp sự kiện
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };

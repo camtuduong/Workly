@@ -73,10 +73,15 @@ const getBoard = async (req, res) => {
     const board = await Board.findOne({
       _id: id,
       "members.userId": userId,
-    }).populate({
-      path: "lists",
-      populate: { path: "cards" },
-    });
+    })
+      .populate({
+        path: "lists",
+        populate: { path: "cards" },
+      })
+      .populate({
+        path: "members.userId",
+        select: "username email",
+      });
 
     if (!board) {
       return res
@@ -181,7 +186,7 @@ const getBoardMembers = async (req, res) => {
 const addMember = async (req, res) => {
   try {
     const { boardId } = req.params;
-    const { memberId, role } = req.body;
+    const { email, role } = req.body;
     const userId = req.user.id;
 
     const board = await Board.findById(boardId);
@@ -196,27 +201,39 @@ const addMember = async (req, res) => {
         .json({ message: "You are not authorized to add members" });
     }
 
-    const existingMember = board.members.find(
-      (member) => member.userId.toString() === memberId
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User with this email not found" });
+    }
+
+    const alreadyInBoard = board.members.find(
+      (member) => member.userId.toString() === user._id.toString()
     );
-    if (existingMember) {
+    if (alreadyInBoard) {
       return res
         .status(400)
         .json({ message: "Member already exists in the board" });
     }
 
-    board.members.push({ userId: memberId, role: role || "member" });
+    board.members.push({ userId: user._id, role: role || "member" });
     await board.save();
 
-    const member = await User.findById(memberId);
-    if (!member) return res.status(404).json({ message: "User not found" });
-
-    member.boards.push({ boardId: board._id, role: role || "member" });
-    await member.save();
+    user.boards.push({ boardId: board._id, role: role || "member" });
+    await user.save();
 
     io.to(boardId).emit("membersChanged");
 
-    res.status(200).json({ message: "Member added successfully", board });
+    res.status(200).json({
+      message: "Member added successfully",
+      user: {
+        userId: user._id,
+        username: user.username,
+        email: user.email,
+        role: role || "member",
+      },
+    });
   } catch (error) {
     console.error("Error adding member:", error.message);
     res.status(500).json({ message: "Server Error" });

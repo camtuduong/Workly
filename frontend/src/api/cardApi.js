@@ -1,7 +1,11 @@
 import apiClient from "./config";
 
-export const createCard = async (listId, title) => {
-  const response = await apiClient.post("/cards", { listId, title });
+export const createCard = async (listId, title, description) => {
+  const response = await apiClient.post("/cards", {
+    listId,
+    title,
+    description,
+  });
   return response.data;
 };
 
@@ -10,8 +14,11 @@ export const getCard = async (cardId) => {
   return response.data;
 };
 
-export const updateCard = async (cardId, title) => {
-  const response = await apiClient.put(`/cards/${cardId}`, { title });
+export const updateCard = async (cardId, title, description) => {
+  const response = await apiClient.put(`/cards/${cardId}`, {
+    title,
+    description,
+  });
   return response.data;
 };
 

@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useTranslation } from "react-i18next";
+import CardDetailModal from "./CardDetailModal";
 
 const Card = ({ card, onEditCard, onDeleteCard }) => {
-  const { t } = useTranslation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -32,6 +32,7 @@ const Card = ({ card, onEditCard, onDeleteCard }) => {
       </div>
       <div className="basis-[10%] cursor-pointer space-x-2">
         <svg
+          onClick={() => setIsModalOpen(true)}
           className="hidden h-4 w-4 text-gray-400 transition-opacity duration-300 group-hover:block"
           fill="none"
           stroke="currentColor"
@@ -45,52 +46,14 @@ const Card = ({ card, onEditCard, onDeleteCard }) => {
             d="M4 6h16M4 12h16M4 18h16"
           />
         </svg>
-
-        {/* <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEditCard();
-          }}
-          className="text-blue-400 hover:text-blue-300"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0l-1.414-1.414a2 2 0 010-2.828z"
-            />
-          </svg>
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDeleteCard(card._id);
-          }}
-          className="text-red-400 hover:text-red-300"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button> */}
       </div>
+      {isModalOpen && (
+        <CardDetailModal
+          card={card}
+          onClose={() => setIsModalOpen(false)}
+          onEditCard={onEditCard}
+        />
+      )}
     </div>
   );
 };

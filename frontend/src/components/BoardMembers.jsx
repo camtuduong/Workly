@@ -13,7 +13,7 @@ const BoardMembers = () => {
   const { boardId } = useParams();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newMemberId, setNewMemberId] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
   const [role, setRole] = useState("member");
 
   useEffect(() => {
@@ -73,14 +73,14 @@ const BoardMembers = () => {
 
   const handleAddMember = async () => {
     try {
-      if (!newMemberId) {
-        alert("Please enter a valid member ID");
+      if (!newMemberEmail) {
+        alert("Please enter a valid email");
         return;
       }
 
-      const newMember = await addMember(boardId, newMemberId, role);
-      setMembers([...members, newMember]);
-      setNewMemberId("");
+      await addMember(boardId, newMemberEmail, role);
+
+      setNewMemberEmail("");
       alert("Member added successfully");
     } catch (error) {
       console.error("Error adding member:", error);
@@ -95,10 +95,10 @@ const BoardMembers = () => {
       {/* Form thêm thành viên */}
       <div className="mb-4">
         <input
-          type="text"
-          placeholder="Enter member ID"
-          value={newMemberId}
-          onChange={(e) => setNewMemberId(e.target.value)}
+          type="email"
+          placeholder="Enter member email"
+          value={newMemberEmail}
+          onChange={(e) => setNewMemberEmail(e.target.value)}
           className="rounded border p-2"
         />
         <select

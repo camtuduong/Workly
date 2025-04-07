@@ -36,9 +36,9 @@ export const getBoardMembers = async (boardId) => {
   return response.data;
 };
 
-export const addMember = async (boardId, memberId, role = "member") => {
+export const addMember = async (boardId, email, role = "member") => {
   const response = await apiClient.post(`/boards/${boardId}/members`, {
-    memberId,
+    email,
     role,
   });
   return response.data;
