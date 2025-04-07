@@ -26,7 +26,12 @@ const createList = async (req, res) => {
     const listsInBoard = await List.find({ boardId });
     const position = listsInBoard.length;
 
-    const list = new List({ title, boardId, position });
+    const list = new List({
+      title,
+      boardId,
+      createdBy: userId,
+      position,
+    });
     await list.save();
 
     board.lists.push(list._id);
@@ -34,7 +39,10 @@ const createList = async (req, res) => {
 
     const updatedBoard = await Board.findById(boardId).populate({
       path: "lists",
-      populate: { path: "cards" },
+      populate: [
+        { path: "cards" },
+        { path: "createdBy", select: "username email" },
+      ],
     });
 
     if (!io) {
