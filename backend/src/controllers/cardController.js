@@ -3,6 +3,7 @@ const Card = require("../models/Card");
 const List = require("../models/List");
 const Board = require("../models/Board");
 const { hasBoardPermission } = require("../utils/permission");
+const path = require("path");
 
 let io;
 const setIo = (socketIo) => {
@@ -103,16 +104,13 @@ const updateCard = async (req, res) => {
     }
 
     const card = await Card.findById(id);
-    if (!card) {
-      return res.status(404).json({ message: "Card not found" });
-    }
+    if (!card) return res.status(404).json({ message: "Card not found" });
 
     const list = await List.findById(card.listId);
     const board = await Board.findById(list.boardId);
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
+    if (!board) return res.status(404).json({ message: "Board not found" });
 
+    // Chỉ người phụ trách hoặc admin mới được sửa
     if (
       card.assignedTo &&
       card.assignedTo.toString() !== userId &&
@@ -123,18 +121,18 @@ const updateCard = async (req, res) => {
         .json({ message: "No permission to update this card" });
     }
 
+    // Cập nhật dữ liệu
     card.title = title;
     card.description = description || card.description;
     card.assignedTo = assignedTo || card.assignedTo;
     await card.save();
 
-    const updatedBoard = await Board.findById(list.boardId).populate({
+    const updatedBoard = await Board.findById(board._id).populate({
       path: "lists",
       populate: { path: "cards" },
     });
 
-    io.to(board._id).emit("boardUpdated", updatedBoard);
-
+    io.to(board._id.toString()).emit("boardUpdated", updatedBoard);
     res.json(card);
   } catch (error) {
     console.error("Error updating card:", error.message);
@@ -148,16 +146,11 @@ const deleteCard = async (req, res) => {
     const userId = req.user.id;
 
     const card = await Card.findById(id);
-    if (!card) {
-      return res.status(404).json({ message: "Card not found" });
-    }
+    if (!card) return res.status(404).json({ message: "Card not found" });
 
     const list = await List.findById(card.listId);
-
     const board = await Board.findById(list.boardId);
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
+    if (!board) return res.status(404).json({ message: "Board not found" });
 
     const member = board.members.find(
       (m) => m.userId.toString() === userId.toString()
@@ -165,21 +158,20 @@ const deleteCard = async (req, res) => {
     if (!member || (member.role !== "admin" && member.role !== "member")) {
       return res
         .status(403)
-        .json({ message: "You don't have permission to create a card" });
+        .json({ message: "You don't have permission to delete this card" });
     }
 
+    // Xoá card khỏi list
     list.cards = list.cards.filter((cardId) => cardId.toString() !== id);
     await list.save();
-
     await card.deleteOne();
 
-    const updatedBoard = await Board.findById(list.boardId).populate({
+    const updatedBoard = await Board.findById(board._id).populate({
       path: "lists",
       populate: { path: "cards" },
     });
 
-    io.to(board._id).emit("boardUpdated", updatedBoard);
-
+    io.to(board._id.toString()).emit("boardUpdated", updatedBoard);
     res.json({ message: "Card deleted successfully" });
   } catch (error) {
     console.error("Error deleting card:", error.message);
@@ -363,6 +355,45 @@ const assignCard = async (req, res) => {
   }
 };
 
+const addAttachment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const card = await Card.findById(id);
+    if (!card) return res.status(404).json({ message: "Card not found" });
+
+    card.attachments.push({
+      filename: file.originalname,
+      url: `/uploads/${file.filename}`,
+    });
+
+    await card.save();
+
+    const list = await List.findById(card.listId);
+    const board = await Board.findById(list.boardId).populate({
+      path: "lists",
+      populate: { path: "cards" },
+    });
+
+    if (io) {
+      io.to(board._id.toString()).emit("boardUpdated", board);
+    }
+
+    res.status(200).json({
+      message: "File uploaded",
+      attachments: card.attachments,
+    });
+  } catch (err) {
+    console.error("Error uploading file:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   setIo,
   getCard,
@@ -371,4 +402,5 @@ module.exports = {
   deleteCard,
   updateCardPosition,
   assignCard,
+  addAttachment,
 };
